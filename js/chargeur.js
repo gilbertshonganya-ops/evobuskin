@@ -24,6 +24,10 @@ const Reseau = (() => {
     [/EXCHANGE_RATE_NOT_CONFIGURED/, 'Le taux de change n’est pas encore enregistré. Enregistrez-le dans Réglages.'],
     [/INVALID_PAYMENT_AMOUNT|INVALID_SALE_LINE|INVALID_SALE_QUANTITY|EMPTY_CART/, 'Cette vente contient une valeur incorrecte.'],
     [/IDEMPOTENCY_KEY_REUSE/, 'Cette opération a déjà été envoyée avec d’autres valeurs.'],
+    [/SHOP_LOCKED/, 'Cette boutique est verrouillée : elle dépasse la limite de votre niveau d’abonnement. Passez à un niveau supérieur pour la débloquer.'],
+    [/PRODUCT_LOCKED/, 'Ce produit est verrouillé : il dépasse la limite de votre niveau d’abonnement. Passez à un niveau supérieur pour le débloquer.'],
+    [/CUSTOMER_LOCKED/, 'Ce client est verrouillé : il dépasse la limite de votre niveau d’abonnement. Passez à un niveau supérieur pour le débloquer.'],
+    [/SUPPLIER_LOCKED/, 'Ce fournisseur est verrouillé : il dépasse la limite de votre niveau d’abonnement. Passez à un niveau supérieur pour le débloquer.'],
     [/BUSINESS_ACCESS_DENIED|FORBIDDEN/, 'Vous n’avez pas accès à cette boutique pour cette opération.']
   ];
   const AUTRES = [

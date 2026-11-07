@@ -99,6 +99,24 @@ const DB = (() => {
     return ajouter('sync_queue', ligne);
   }
 
+  // Écriture GROUPÉE : toutes les lignes dans UNE seule transaction (beaucoup plus rapide que ligne par ligne).
+  // Une ligne sans "id" est ajoutée (l'id attribué est recopié dans l'objet) ; une ligne avec "id" est mise à jour.
+  function ecrireLot(table, objets) {
+    return new Promise((resolve, reject) => {
+      if (!objets || !objets.length) { resolve([]); return; }
+      const t = base.transaction(table, 'readwrite');
+      const s = t.objectStore(table);
+      t.oncomplete = () => resolve(objets);
+      t.onabort = () => reject(t.error || new Error('Écriture annulée'));
+      objets.forEach((o) => {
+        if (o.id === undefined || o.id === null) {
+          const rq = s.add(o);
+          rq.onsuccess = () => { o.id = rq.result; };
+        } else s.put(o);
+      });
+    });
+  }
+
   // Compte (utilisateur) actuellement connecté : une opération ne part qu'avec le compte qui l'a créée
   function uidCourant() {
     try { return (window.Auth && Auth.getSession() && Auth.getSession().user && Auth.getSession().user.id) || (window.App && App.utilisateurLocal && App.utilisateurLocal.id) || null; }
@@ -406,7 +424,7 @@ const DB = (() => {
     });
   }
 
-  return { ouvrir, tout, lire, ecrire, ajouter, supprimer, lireParam, ecrireParam, transaction,
+  return { ouvrir, tout, lire, ecrire, ecrireLot, ajouter, supprimer, lireParam, ecrireParam, transaction,
            mettreEnFileSync, syncQueueListe, uidCourant, marquerSync, enregistrerVenteEtMettreEnFile,
            enregistrerVente, annulerVente, ajusterStock, enregistrerAchat, importerProduits,
            exporterTout, importerTout, toutEffacer };

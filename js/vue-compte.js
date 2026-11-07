@@ -9,6 +9,7 @@ const VueCompte = {
       '<div class="carte"><h3>Mon compte</h3><div class="ligne-flex"><span class="petit">Nom</span><b>' + esc(nom) + '</b></div>' +
       '<div class="ligne-flex"><span class="petit">Adresse email</span><b>' + esc(email) + '</b></div>' +
       '<div class="ligne-flex"><span class="petit">Rôle</span><b>' + (App.estPatron() ? 'Patron' : 'Vendeur') + '</b></div></div>' +
+      '<div class="carte"><h3>Aide</h3><p class="petit">Besoin de comprendre une fonction ? L’Aide explique tout, pas à pas.</p><button class="btn" id="cAide">Ouvrir l’aide</button></div>' +
       '<div class="carte"><h3>Changer mon mot de passe</h3>' +
       '<p class="petit">Il vous servira à vous connecter, avec Internet comme sans Internet.' + (App.estPatron() ? '' : ' Votre patron verra ce changement dans son journal d’activité.') + '</p>' +
       '<label class="champ"><span>Mot de passe actuel</span><input id="mcAncien" type="password" autocomplete="current-password"></label>' +
@@ -21,6 +22,7 @@ const VueCompte = {
       (this.sectionSuppression ? await this.sectionSuppression() : '');
     this.brancherSuppression(conteneur, email, integre);
     const erreur = (m) => { const e = $('#mcErreur'); e.textContent = m; e.hidden = !m; };
+    const bAide = $('#cAide'); if (bAide) bAide.addEventListener('click', () => App.ouvrirAide());
     $('#mcOk').addEventListener('click', async () => {
       erreur('');
       const ancien = $('#mcAncien').value, nouveau = $('#mcNouveau').value, confirm = $('#mcConfirm').value;

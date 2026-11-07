@@ -43,6 +43,7 @@ const AuthUI = (() => {
     const vue = $('#vue');
     $('#menu').hidden = true;
     $('#btnQuitter').hidden = true;
+    const bAide = $('#btnAide'); if (bAide) bAide.hidden = true;
     $('#infoRole').textContent = 'Compte sécurisé';
     vue.innerHTML = `<section class="auth-page"><div class="auth-card"><img class="auth-logo" src="icons/logo.png" alt="EvoBuskin" width="86" height="86"><div class="auth-brand">EvoBuskin</div>${slogan ? `<p class="auth-slogan"><b>${slogan}</b></p>` : ''}${content}</div></section>`;
     bindCommon();

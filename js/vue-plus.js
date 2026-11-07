@@ -9,7 +9,8 @@ const VuePlus = {
       ['abonnement', '\u2B50', 'Mon abonnement', 'Niveau, limites et paiement'],
       ['boutiques', '\u{1F3EA}', 'Mes boutiques', 'Ajouter, ouvrir et gérer plusieurs boutiques'],
       ['equipe', '\u{1F465}', 'Équipe', 'Inviter des vendeurs, gérer les accès'],
-      ['reglages', '\u2699\uFE0F', 'Réglages', 'Boutique, taux, mot de passe, sauvegarde']
+      ['reglages', '\u2699\uFE0F', 'Réglages', 'Boutique, taux, mot de passe, sauvegarde'],
+      ['aide', '\u2753', 'Aide', 'Tout comprendre, pas à pas : vendre, stock, abonnement…']
     ];
     conteneur.innerHTML =
       (await App.bandeaux()) +

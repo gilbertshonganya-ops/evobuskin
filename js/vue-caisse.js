@@ -93,11 +93,12 @@ const VueCaisse = {
       const ligne = this.panier.find((l) => l.produitId === p.id);
       const rupture = p.stock <= 0;
       const sansPrix = prixAFixer(p);
-      return '<button class="produit ' + ((rupture || sansPrix) ? 'rupture' : '') + '" data-id="' + p.id + '">' +
+      const verr = Abonnement.verrouille('produits', p);
+      return '<button class="produit ' + ((rupture || sansPrix || verr) ? 'rupture' : '') + '" data-id="' + p.id + '">' +
         (ligne ? '<span class="p-qte">' + formatQuantite(ligne.qte) + '</span>' : '') +
         '<span class="p-nom">' + esc(p.nom) + '</span>' +
         (sansPrix ? '<span class="p-prix" style="color:var(--couleur-alerte)">Prix à fixer</span>' : '<span class="p-prix">' + prixProduit(p) + '</span>') +
-        '<span class="p-stock">' + (rupture ? 'Rupture de stock' : 'Stock : ' + formatQuantite(p.stock)) + '</span>' +
+        '<span class="p-stock">' + (verr ? '🔒 Verrouillé (niveau)' : rupture ? 'Rupture de stock' : 'Stock : ' + formatQuantite(p.stock)) + '</span>' +
         '</button>';
     }).join('');
     $$('.produit', grille).forEach((b) => b.addEventListener('click', () => this.ajouter(Number(b.dataset.id))));
@@ -107,6 +108,7 @@ const VueCaisse = {
   ajouter(idProduit, quantite = 1) {
     const p = this.produits.find((x) => x.id === idProduit);
     if (!p) return false;
+    if (Abonnement.verrouille('produits', p)) { Abonnement.expliquerVerrou('produits'); return false; }
     if (prixAFixer(p)) {
       toast(App.estPatron() ? 'Le prix de « ' + p.nom + ' » n\'est pas encore fixé : allez dans Stock, touchez le produit puis Modifier.' : 'Le prix de « ' + p.nom + ' » n\'est pas encore fixé : demandez au patron.', 'erreur');
       return false;
@@ -121,9 +123,10 @@ const VueCaisse = {
         prixUSD: versUSD(p.prixVente, p.devise, App.taux()),
         coutUSD: versUSD(p.prixAchat || 0, p.devise, App.taux()),
         // Tarifs de gros et de carton (facultatifs, définis dans la fiche produit)
-        prixGrosUSD: p.prixGros != null ? versUSD(p.prixGros, p.devise, App.taux()) : null,
+        // Gros et cartons : uniquement si le niveau d'abonnement les inclut (les prix saisis sont conservés, sans être appliqués)
+        prixGrosUSD: (p.prixGros != null && Abonnement.peut('wholesale')) ? versUSD(p.prixGros, p.devise, App.taux()) : null,
         seuilGros: p.seuilGros || 0,
-        cartonQte: p.cartonQte || 0,
+        cartonQte: Abonnement.peut('wholesale') ? (p.cartonQte || 0) : 0,
         prixCartonUSD: p.prixCarton != null ? versUSD(p.prixCarton, p.devise, App.taux()) : null
       };
       this.panier.push(ligne);
@@ -223,7 +226,11 @@ const VueCaisse = {
   // ---------- Paiement ----------
   async ouvrirPaiement() {
     if (!this.panier.length) return;
-    const clients = (await DB.tout('clients')).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+    const clients = (await DB.tout('clients')).filter((c) => c.actif !== false).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+    // Garde-fou : un article devenu verrouillé (changement de niveau) ne peut pas être encaissé
+    if (this.panier.some((l) => { const pr = this.produits.find((x) => x.id === l.produitId); return pr && Abonnement.verrouille('produits', pr); })) {
+      toast('Un produit du panier est verrouillé par votre niveau d’abonnement : retirez-le du panier.', 'erreur'); return;
+    }
     const taux = App.taux();
     const total = this.totalUSD();
     const etat = { mode: 'especes', devise: App.reglages.affichage === 'CDF' ? 'CDF' : 'USD' };
@@ -240,7 +247,9 @@ const VueCaisse = {
       '<label class="champ" id="blocRef"><span>Référence de la transaction (facultatif)</span><input id="reference" autocomplete="off" placeholder="Ex : code reçu par SMS"></label>' +
       '<div id="blocClient">' +
         '<label class="champ"><span>Client (obligatoire s\'il reste une dette)</span><select id="clientId"><option value="">-- Choisir --</option>' +
-        clients.map((c) => '<option value="' + c.id + '">' + esc(c.nom) + '</option>').join('') +
+        clients.map((c) => Abonnement.verrouille('clients', c)
+          ? '<option value="' + c.id + '" disabled>🔒 ' + esc(c.nom) + ' (verrouillé)</option>'
+          : '<option value="' + c.id + '">' + esc(c.nom) + '</option>').join('') +
         '<option value="new">+ Nouveau client</option></select></label>' +
         '<div id="nouveauClient" hidden><div class="deux-colonnes">' +
           '<label class="champ"><span>Nom</span><input id="ncNom" autocomplete="off"></label>' +

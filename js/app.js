@@ -6,6 +6,8 @@ const App = {
   role: null,            // 'patron' ou 'vendeur' (null = verrouillé)
   businessId: null,      // fourni par le profil serveur, jamais par le frontend
   onglet: null,
+  numeroAffichage: 0,
+  ongletAvantAide: 'caisse',
   derniereActivite: Date.now(),
   invitationInstall: null,
   essaisPin: 0,
@@ -28,6 +30,7 @@ const App = {
     { id: 'equipe',   titre: 'Équipe',    roles: ['patron'], parent: 'plus', vue: () => VueEquipe },
     { id: 'boutiques', titre: 'Mes boutiques', roles: ['patron'], parent: 'plus', vue: () => VueBoutiques },
     { id: 'abonnement', titre: 'Mon abonnement', roles: ['patron'], parent: 'plus', vue: () => VueAbonnement },
+    { id: 'aide',     titre: 'Aide',      roles: ['patron', 'vendeur'], parent: 'plus', vue: () => VueAide },
   ],
 
   // Bouton « Retour » placé en haut des écrans rangés dans Plus
@@ -160,7 +163,18 @@ const App = {
       if (e.target.closest('[data-aller-compte]')) this.aller(this.estPatron() ? 'reglages' : 'compte');
       if (e.target.closest('[data-aller-abonnement]')) this.aller('abonnement');
     });
+    // Bouton « Débloquer » placé dans une fenêtre : on ferme la fenêtre puis on ouvre « Mon abonnement »
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-aller-abonnement]');
+      if (!b || !b.closest('.fond-fenetre')) return;
+      $$('.fond-fenetre').forEach((x) => x.remove());
+      document.body.classList.remove('modal-ouvert');
+      this.aller('abonnement');
+    });
     $('#nomBoutique').addEventListener('click', () => { if (this.estPatron() && this.role) this.aller('boutiques'); });
+    // Bouton « ? » de la barre du haut : ouvre l'Aide depuis n'importe quel écran
+    $('#btnAide').addEventListener('click', () => { if (this.role) this.ouvrirAide(); });
+    $('#vue').addEventListener('click', (e) => { if (e.target.closest('[data-recharger-ecran]')) this.rafraichir(); });
 
     // Bouton "Installer l'application" proposé par Chrome
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); this.invitationInstall = e; });
@@ -236,22 +250,36 @@ const App = {
       }
     }
     SyncManager.configure(this.businessId);
-    // Réessayer d'abord les opérations locales en attente, puis télécharger l'état serveur.
-    await SyncManager.syncNow();
-    SyncManager.start();
     this.reglages.nomBoutique = profile.business_name || this.reglages.nomBoutique;
     $('#nomBoutique').textContent = this.reglages.nomBoutique || 'EvoBuskin';
-    // Télécharger le jeu de données partagé AVANT d'ouvrir les écrans :
-    // ventes, dettes, achats, dépenses et rapports viennent du serveur sur chaque appareil.
-    const cloudPull = await CloudSnapshotSync.demarrer(this.businessId);
-    if (cloudPull?.raison === 'appareil-autre-boutique') {
+    // OUVERTURE RAPIDE : si cet appareil possède déjà les données de cette boutique, on ouvre les écrans tout de suite
+    // avec ces données, et la mise à jour depuis le serveur se fait en arrière-plan (l'écran se redessine seul).
+    // Première ouverture sur un appareil : on télécharge d'abord (le chargeur reste affiché).
+    const lie = await DB.lireParam('cloudBusinessId', null);
+    if (lie && String(lie) !== String(this.businessId)) {
       const message = 'Cet appareil contient déjà les données d’une autre boutique. Pour éviter de mélanger deux commerces, utilisez un autre téléphone ou un profil de navigateur séparé.';
       this.role = null; this.businessId = null;
       await Auth.signOut();
       throw new Error(message);
     }
-    if (!cloudPull?.ok && cloudPull?.raison !== 'hors-ligne') {
-      toast('Vos données n’ont pas pu être mises à jour. Vérifiez votre connexion puis réessayez.', 'erreur');
+    const dejaLocal = !!lie && Number(await DB.lireParam('cloudSnapshotSyncedAt', 0)) > 0;
+    if (dejaLocal) {
+      const idBoutique = this.businessId;
+      (async () => {
+        try { await SyncManager.syncNow(); } catch (_) { /* la file sera réessayée plus tard */ }
+        if (this.businessId !== idBoutique) return;
+        const r = await CloudSnapshotSync.demarrer(idBoutique);
+        if (this.businessId === idBoutique && r && r.ok && r.modifie && window.TempsReel) TempsReel.rafraichirVue();
+      })();
+      SyncManager.start();
+    } else {
+      // Réessayer d'abord les opérations locales en attente, puis télécharger l'état serveur.
+      await SyncManager.syncNow();
+      SyncManager.start();
+      const cloudPull = await CloudSnapshotSync.demarrer(this.businessId);
+      if (!cloudPull?.ok && cloudPull?.raison !== 'hors-ligne') {
+        toast('Vos données n’ont pas pu être téléchargées. Vérifiez votre connexion puis rouvrez l’application.', 'erreur');
+      }
     }
     TempsReel.demarrer(this.businessId);
     Abonnement.demarrer();
@@ -335,6 +363,7 @@ const App = {
     $('#infoRole').textContent = role === 'patron' ? 'Patron' : 'Vendeur';
     $('#menu').hidden = false;
     $('#btnQuitter').hidden = false;
+    $('#btnAide').hidden = false;
     const visibles = this.onglets.filter((o) => o.roles.includes(role) && !o.parent);
     $('#menu').innerHTML = visibles.map((o) =>
       '<button data-onglet="' + o.id + '"><span class="ico">' + o.icone + '</span>' + o.titre + '</button>').join('');
@@ -349,15 +378,31 @@ const App = {
     $$('#menu button').forEach((b) => b.classList.toggle('actif', b.dataset.onglet === (onglet.parent || id)));
     const vue = $('#vue');
     vue.scrollTop = 0;
+    // Boutique verrouillée par le niveau d'abonnement (au-delà du nombre de boutiques autorisé) : rien d'utilisable sauf l'aide,
+    // l'abonnement et le changement de boutique. Les données sont conservées.
+    if (Abonnement.boutiqueVerrouillee() && !['aide', 'abonnement', 'boutiques', 'plus', 'compte', 'reglages'].includes(id)) { Abonnement.boutiqueBloquee(vue); return; }
     // Fonctions réservées à certains niveaux d'abonnement (le serveur applique aussi la règle)
     const exigence = { achats: 'purchases', depenses: 'expenses', import: 'import' }[id];
     if (exigence && !Abonnement.peut(exigence)) { Abonnement.pageBloquee(vue, exigence, onglet.titre); return; }
+    // « Chargement… » n'apparaît que si l'écran met plus de 150 ms à s'afficher (les écrans locaux sont instantanés)
+    const jeton = ++this.numeroAffichage;
+    const attente = setTimeout(() => { if (jeton === this.numeroAffichage && !vue.dataset.pret) vue.innerHTML = '<div class="chargement-ecran"><span class="rond"></span><span>Chargement…</span></div>'; }, 150);
+    delete vue.dataset.pret;
     try {
       await onglet.vue().afficher(vue);
+      vue.dataset.pret = '1';
     } catch (e) {
       console.error(e);
-      vue.innerHTML = '<div class="carte danger"><b>Une erreur est survenue</b><p class="petit">' + esc(Reseau.traduire(e)) + '</p></div>';
-    }
+      vue.innerHTML = '<div class="carte danger"><b>Une erreur est survenue</b><p class="petit">' + esc(Reseau.traduire(e)) + '</p>' +
+        '<button class="btn contour" data-recharger-ecran style="margin-top:8px">Réessayer</button></div>';
+    } finally { clearTimeout(attente); }
+  },
+
+  // Ouvre l'Aide en mémorisant l'écran d'où l'on vient (le bouton Retour de l'Aide y ramène)
+  ouvrirAide(sujet) {
+    if (this.onglet && this.onglet !== 'aide') this.ongletAvantAide = this.onglet;
+    if (sujet && window.VueAide) VueAide.sujetDemande = sujet;
+    return this.aller('aide');
   },
 
   // Recharge l'écran en cours (après une modification)

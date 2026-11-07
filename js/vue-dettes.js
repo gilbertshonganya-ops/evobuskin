@@ -38,7 +38,7 @@ const VueDettes = {
     if (!liste.length) { el.innerHTML = '<div class="vide">' + (this.clients.length ? 'Aucun client trouvé.' : 'Aucun client. Touchez + pour en ajouter un.') + '</div>'; return; }
     el.innerHTML = '<div class="liste">' + liste.map((x) => {
       const derniere = this.mouvements.filter((m) => m.clientId === x.c.id).reduce((mx, m) => Math.max(mx, m.date), 0);
-      return '<div class="ligne" data-id="' + x.c.id + '"><div><div class="nom">' + esc(x.c.nom) + '</div>' +
+      return '<div class="ligne' + (Abonnement.verrouille('clients', x.c) ? ' verrouille' : '') + '" data-id="' + x.c.id + '"><div><div class="nom">' + (Abonnement.verrouille('clients', x.c) ? '🔒 ' : '') + esc(x.c.nom) + '</div>' +
         '<div class="sous">' + esc(x.c.tel || 'Pas de téléphone') + (derniere ? ' &middot; dernier mouvement le ' + formatDate(derniere) : '') + '</div></div>' +
         '<div class="droite">' + (x.solde > 0.005 ? '<span class="rouge-txt gras">' + formatUSD(x.solde) + '</span>' : '<span class="badge">À jour</span>') + '</div></div>';
     }).join('') + '</div>';
@@ -103,15 +103,17 @@ const VueDettes = {
     const client = await DB.lire('clients', idClient);
     if (!client) return;
     const solde = this.solde(idClient);
+    const verr = Abonnement.verrouille('clients', client);
     const histo = this.mouvements.filter((m) => m.clientId === idClient).sort((a, b) => b.date - a.date);
     const f = ouvrirFenetre(client.nom,
+      (verr ? '<div class="bandeau"><b>🔒 Client verrouillé.</b> Votre niveau est limité à ' + esc(String(Abonnement.limite('customers'))) + ' clients à crédit : il est conservé, mais on ne peut plus lui vendre à crédit ni modifier sa fiche. Vous pouvez toujours enregistrer ses paiements. Il se débloque au passage à un niveau supérieur.</div>' : '') +
       '<div class="carte ' + (solde > 0.005 ? 'danger' : '') + '" style="margin-bottom:10px"><div class="petit">Reste à payer</div><div style="font-size:1.3rem">' + App.montantHtml(Math.max(0, solde)) + '</div>' +
       '<div class="petit">' + esc(client.tel || 'Pas de téléphone') + '</div></div>' +
       '<div class="pile">' +
         (solde > 0.005 ? '<button class="btn" id="dPaie">Enregistrer un paiement</button>' : '') +
         (solde > 0.005 ? '<button class="btn contour" id="dRappel">Envoyer un rappel WhatsApp</button>' : '') +
-        (App.estPatron() ? '<button class="btn gris" id="dDette">Ajouter une dette (ancien cahier)</button>' : '') +
-        '<div class="ligne-boutons"><button class="btn gris" id="dModif">Modifier</button>' +
+        (App.estPatron() && !verr ? '<button class="btn gris" id="dDette">Ajouter une dette (ancien cahier)</button>' : '') +
+        '<div class="ligne-boutons">' + (verr ? '' : '<button class="btn gris" id="dModif">Modifier</button>') +
         (App.estPatron() ? '<button class="btn rouge" id="dSuppr"' + (solde > 0.005 ? ' style="opacity:.55"' : '') + '>Supprimer</button>' : '') + '</div>' +
       '</div>' +
       '<h3 style="margin:16px 0 6px">Historique</h3>' +
@@ -132,7 +134,7 @@ const VueDettes = {
     });
     const detteBtn = $('#dDette', f.el);
     if (detteBtn) detteBtn.addEventListener('click', () => { f.fermer(); this.formulaireDette(client); });
-    $('#dModif', f.el).addEventListener('click', () => { f.fermer(); this.formulaireClient(client); });
+    const modif = $('#dModif', f.el); if (modif) modif.addEventListener('click', () => { f.fermer(); this.formulaireClient(client); });
     const suppr = $('#dSuppr', f.el);
     if (suppr) suppr.addEventListener('click', async () => {
       // Règle : un client qui a encore une dette ne peut jamais être supprimé

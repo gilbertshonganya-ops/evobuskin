@@ -7,12 +7,11 @@ const VueRapports = {
 
   // Calcule tous les chiffres de la période (utilisé par l'écran ET par le PDF)
   async collecter() {
-    // Les rapports sont recalculés à partir du snapshot cloud, pas seulement du navigateur.
-    if (window.CloudSnapshotSync) {
-      const cloud = await CloudSnapshotSync.tirer({ force: true });
-      if (navigator.onLine && CloudDB.ready() && !cloud.ok) {
-        throw new Error('Vos données complètes n’ont pas pu être chargées. Vérifiez votre connexion Internet puis réessayez : les rapports pourraient être incomplets.');
-      }
+    // Les rapports s'affichent TOUT DE SUITE à partir des données déjà présentes sur l'appareil.
+    // La mise à jour depuis le serveur se fait en arrière-plan (sans bloquer, sans message d'erreur) ;
+    // si elle apporte du nouveau, l'écran se redessine tout seul.
+    if (window.CloudSnapshotSync && navigator.onLine && CloudDB.ready()) {
+      CloudSnapshotSync.tirer().then((r) => { if (r && r.ok && r.modifie && App.onglet === 'rapports' && window.TempsReel) TempsReel.rafraichirVue(); }).catch(() => {});
     }
     const [ventesTout, dettes, produits, clients, depensesTout, achatsTout, dettesF, fournisseurs] = await Promise.all([
       DB.tout('ventes'), DB.tout('dettes'), DB.tout('produits'), DB.tout('clients'),
@@ -101,8 +100,10 @@ const VueRapports = {
     const t = App.taux();
     const stat = (cls, lib, usd, sous) => '<div class="stat ' + cls + '"><div class="lib">' + lib + '</div><div class="val">' + formatUSD(usd) + '</div><div class="val2">' + (sous || formatCDF(usd * t)) + '</div></div>';
 
+    const derniereMaj = Number(await DB.lireParam('cloudSnapshotSyncedAt', 0)) || 0;
     conteneur.innerHTML =
       (await App.bandeaux()) +
+      (derniereMaj ? '<div class="petit maj-donnees">Données à jour : ' + esc(formatDateHeure(derniereMaj)) + '</div>' : '') +
       Periode.html(this.periode) +
       '<div class="stats">' +
         stat('', 'Ventes', d.ca) +

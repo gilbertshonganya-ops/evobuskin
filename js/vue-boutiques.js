@@ -2,22 +2,33 @@
    Chaque boutique a ses propres produits, clients, ventes et vendeurs. */
 const VueBoutiques = {
   async afficher(conteneur) {
-    conteneur.innerHTML = App.entete('Mes boutiques') + '<p class="petit">Chargement…</p>';
-    let boutiques = [];
+    // Liste gardée sur l'appareil : affichée tout de suite, puis actualisée depuis le serveur
+    let boutiques = (await DB.lireParam('boutiquesCache', null)) || null;
+    if (!boutiques) conteneur.innerHTML = App.entete('Mes boutiques') + '<div class="chargement-ecran"><span class="rond"></span><span>Chargement…</span></div>';
+    else this.dessiner(conteneur, boutiques);
     try {
       if (!navigator.onLine) throw Reseau.erreur();
-      boutiques = await CloudDB.rpc('v19_my_shops', {}) || [];
+      const frais = await CloudDB.rpc('v19_my_shops', {}) || [];
+      await DB.ecrireParam('boutiquesCache', frais);
+      if (App.onglet !== 'boutiques') return;
+      boutiques = frais;
     } catch (e) {
-      conteneur.innerHTML = App.entete('Mes boutiques') + '<div class="bandeau rouge">' + esc(Reseau.traduire(e)) + '</div>';
+      if (!boutiques) conteneur.innerHTML = App.entete('Mes boutiques') + '<div class="bandeau rouge">' + esc(Reseau.traduire(e)) + '</div>';
       return;
     }
+    this.dessiner(conteneur, boutiques);
+  },
+
+  dessiner(conteneur, boutiques) {
+    const nbVerr = boutiques.filter((b) => b.is_locked).length;
     conteneur.innerHTML = App.entete('Mes boutiques') +
+      (nbVerr ? '<div class="bandeau"><b>🔒 ' + nbVerr + ' boutique' + (nbVerr > 1 ? 's' : '') + ' verrouillée' + (nbVerr > 1 ? 's' : '') + '.</b> Votre niveau d’abonnement est limité à ' + esc(String(Abonnement.limite('shops'))) + ' boutique(s). Les autres sont conservées avec toutes leurs données, mais ne peuvent plus être ouvertes ni utilisées. Elles se débloquent au passage à un niveau supérieur.<button class="btn contour" data-aller-abonnement style="margin-top:8px">Débloquer</button></div>' : '') +
       '<p class="petit">Chaque boutique a ses produits, ses clients, ses ventes et ses vendeurs. Les invitations de vendeurs concernent la boutique ouverte.</p>' +
       '<div class="liste">' + boutiques.map((b) => {
         const active = String(b.id) === String(App.businessId);
-        return '<div class="ligne" style="cursor:default;align-items:center"><div><div class="nom">' + esc(b.name) + (active ? ' <span class="badge">Ouverte</span>' : '') + '</div>' +
+        return '<div class="ligne' + (b.is_locked ? ' verrouille' : '') + '" style="cursor:default;align-items:center"><div><div class="nom">' + (b.is_locked ? '🔒 ' : '') + esc(b.name) + (active ? ' <span class="badge">Ouverte</span>' : '') + (b.is_locked ? ' <span class="badge rouge">Verrouillée</span>' : '') + '</div>' +
           '<div class="sous">' + Number(b.sellers) + ' vendeur(s)</div></div><div style="display:flex;gap:6px">' +
-          (active ? '' : '<button class="btn" data-ouvrir="' + esc(b.id) + '" style="padding:6px 12px">Ouvrir</button>') +
+          (active || b.is_locked ? '' : '<button class="btn" data-ouvrir="' + esc(b.id) + '" style="padding:6px 12px">Ouvrir</button>') +
           '<button class="btn gris" data-renommer="' + esc(b.id) + '" data-nom="' + esc(b.name) + '" style="padding:6px 12px">Renommer</button></div></div>';
       }).join('') + '</div>' +
       '<button class="btn" id="bAjout" style="margin-top:12px">+ Ajouter une boutique</button>';

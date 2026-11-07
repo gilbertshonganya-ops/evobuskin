@@ -48,7 +48,7 @@ const TempsReel = (() => {
     clearTimeout(delai);
     delai = setTimeout(async () => {
       const r = await CloudSnapshotSync.tirer({ force: true });
-      if (r && r.ok) rafraichirVue();
+      if (r && r.ok && r.modifie !== false) rafraichirVue();
     }, 600);
   }
 

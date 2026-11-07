@@ -60,9 +60,9 @@ const VueStock = {
       return;
     }
     el.innerHTML = '<div class="liste">' + liste.map((p) =>
-      '<div class="ligne" data-id="' + p.id + '"><div><div class="nom">' + esc(p.nom) + '</div>' +
+      '<div class="ligne' + (Abonnement.verrouille('produits', p) ? ' verrouille' : '') + '" data-id="' + p.id + '"><div><div class="nom">' + (Abonnement.verrouille('produits', p) ? '🔒 ' : '') + esc(p.nom) + '</div>' +
       '<div class="sous">' + esc(p.categorie || 'Sans catégorie') + ' &middot; ' + (prixAFixer(p) ? '<b style="color:var(--couleur-alerte)">Prix de vente à fixer</b>' : prixProduit(p)) + '</div></div>' +
-      '<div class="droite">' + this.badge(p) + (prixAFixer(p) ? '<div style="margin-top:4px"><span class="badge orange">Prix à fixer</span></div>' : '') + '</div></div>').join('') + '</div>';
+      '<div class="droite">' + (Abonnement.verrouille('produits', p) ? '<span class="badge rouge">Verrouillé</span>' : this.badge(p)) + (prixAFixer(p) ? '<div style="margin-top:4px"><span class="badge orange">Prix à fixer</span></div>' : '') + '</div></div>').join('') + '</div>';
     $$('.ligne', el).forEach((l) => l.addEventListener('click', () => this.detail(Number(l.dataset.id))));
   },
 
@@ -84,10 +84,14 @@ const VueStock = {
         '<div class="ligne"><span>Code-barres</span><span>' + esc(p.codeBarres || '-') + '</span></div>' +
         '<div class="ligne"><span>Catégorie</span><span>' + esc(p.categorie || '-') + '</span></div>' +
       '</div>' +
-      (App.estPatron()
+      (Abonnement.verrouille('produits', p)
+        ? '<div class="bandeau"><b>🔒 Produit verrouillé.</b> Votre niveau ' + esc((Abonnement.donnees() || {}).name || 'actuel') + ' est limité à ' + esc(String(Abonnement.limite('products'))) + ' produits. Celui-ci est conservé mais ne peut ni être vendu ni modifié. ' +
+          (App.estPatron() ? 'Il se débloque au passage à un niveau supérieur, ou quand de la place se libère.<button class="btn contour" data-aller-abonnement style="margin-top:8px">Débloquer</button>' : 'Demandez au patron de passer au niveau supérieur.') + '</div>' +
+          (App.estPatron() ? '<div class="ligne-boutons"><button class="btn rouge" id="bSuppr">Supprimer</button></div>' : '')
+        : (App.estPatron()
         ? '<div class="ligne-boutons"><button class="btn" id="bEntree">+ Entrée</button><button class="btn jaune" id="bSortie">&minus; Sortie</button></div>' +
           '<div class="ligne-boutons"><button class="btn gris" id="bModif">Modifier</button><button class="btn rouge" id="bSuppr">Supprimer</button></div>'
-        : '') +
+        : '')) +
       '<h3 style="margin:16px 0 6px">Derniers mouvements</h3>' +
       (mouvements.length
         ? '<div class="liste">' + mouvements.map((m) =>
@@ -96,9 +100,9 @@ const VueStock = {
         : '<p class="petit">Aucun mouvement enregistré.</p>'));
 
     if (App.estPatron()) {
-      $('#bEntree', f.el).addEventListener('click', () => { f.fermer(); this.mouvement(p, 'entree'); });
-      $('#bSortie', f.el).addEventListener('click', () => { f.fermer(); this.mouvement(p, 'sortie'); });
-      $('#bModif', f.el).addEventListener('click', () => { f.fermer(); this.formulaire(p); });
+      const bE = $('#bEntree', f.el); if (bE) bE.addEventListener('click', () => { f.fermer(); this.mouvement(p, 'entree'); });
+      const bS = $('#bSortie', f.el); if (bS) bS.addEventListener('click', () => { f.fermer(); this.mouvement(p, 'sortie'); });
+      const bM = $('#bModif', f.el); if (bM) bM.addEventListener('click', () => { f.fermer(); this.formulaire(p); });
       $('#bSuppr', f.el).addEventListener('click', async () => {
         if (await confirmer('Supprimer le produit', 'Supprimer « ' + p.nom + ' » ? Les anciennes ventes restent dans les rapports.', 'Supprimer', true)) {
           p.actif = false;
@@ -117,6 +121,7 @@ const VueStock = {
 
   // Entrée (réapprovisionnement) ou sortie (casse, vol, usage personnel...)
   mouvement(p, type) {
+    if (Abonnement.verrouille('produits', p)) { Abonnement.expliquerVerrou('produits'); return; }
     const entree = type === 'entree';
     const f = ouvrirFenetre((entree ? 'Entrée : ' : 'Sortie : ') + p.nom,
       '<p class="petit">Stock actuel : <b>' + formatQuantite(p.stock) + '</b></p>' +
@@ -142,6 +147,7 @@ const VueStock = {
 
   // Création ou modification d'un produit. codePrefill : code lu par le scanner.
   formulaire(p, codePrefill) {
+    if (p && Abonnement.verrouille('produits', p)) { Abonnement.expliquerVerrou('produits'); return; }
     const nouveau = !p;
     p = p || { nom: '', categorie: '', codeBarres: codePrefill || '', devise: 'USD', prixAchat: '', prixVente: '', stock: 0, seuil: 5, actif: true };
     const f = ouvrirFenetre(nouveau ? 'Nouveau produit' : 'Modifier le produit',

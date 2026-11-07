@@ -15,10 +15,11 @@ const Abonnement = (() => {
       if (!navigator.onLine || !Auth.getSession() || !App.businessId) throw Reseau.erreur();
       info = await CloudDB.rpc('v20_my_subscription', { p_business_id: App.businessId });
       await DB.ecrireParam(CLE_CACHE, { businessId: App.businessId, info, at: Date.now() });
+      construireEnsembles();
     } catch (e) {
       if (navigator.onLine) { try { Diag.noter('abonnement', e); } catch (_) {} }
       const c = await DB.lireParam(CLE_CACHE, null);
-      if (c && c.businessId === App.businessId) info = c.info;
+      if (c && c.businessId === App.businessId) { info = c.info; construireEnsembles(); }
     }
     return info;
   }
@@ -26,6 +27,40 @@ const Abonnement = (() => {
   const tier = () => (info && info.tier) || 'free';
   const peut = (f) => !info || !!(info.features && info.features[f]);          // inconnu = permissif (le serveur décide)
   const limite = (k) => (info && info.limits && info.limits[k] != null ? Number(info.limits[k]) : null);
+
+  // ---------- ÉLÉMENTS VERROUILLÉS (au-delà de la limite du niveau) ----------
+  // Le serveur envoie, dans « locked », les identifiants des éléments dépassant la limite du niveau actuel.
+  // Rien n'est supprimé : ces éléments sont simplement inutilisables jusqu'au passage à un niveau qui les autorise.
+  const TYPE_LIMITE = { produits: 'products', clients: 'customers', fournisseurs: 'suppliers' };
+  let ensembles = null;
+  function construireEnsembles() {
+    const l = (info && info.locked) || null;
+    ensembles = l ? { products: new Set((l.products || []).map(String)), customers: new Set((l.customers || []).map(String)), suppliers: new Set((l.suppliers || []).map(String)) } : null;
+  }
+  // type : 'produits' | 'clients' | 'fournisseurs' ; element : la ligne locale (avec son cloudId)
+  function verrouille(type, element) {
+    if (!ensembles || !element || element.cloudId === undefined || element.cloudId === null) return false;
+    return ensembles[TYPE_LIMITE[type]].has(String(element.cloudId));
+  }
+  const boutiqueVerrouillee = () => !!(info && info.shop_locked);
+  function boutiqueBloquee(vue) {
+    vue.innerHTML = '<div class="carte" style="text-align:center;margin-top:14px"><div style="font-size:2.4rem">🔒</div>' +
+      '<h2 style="margin:6px 0">Cette boutique est verrouillée</h2>' +
+      (App.estPatron()
+        ? '<p>Votre niveau ' + esc((info && info.name) || 'Gratuit') + ' autorise ' + esc(String(limite('shops'))) + ' boutique(s). Celle-ci est conservée avec toutes ses données (produits, clients, ventes, dettes), mais elle est inutilisable pour le moment.</p>' +
+          '<p class="petit">Elle se débloque dès que vous passez à un niveau qui autorise plus de boutiques.</p>' +
+          '<div class="pile"><button class="btn" data-aller-abonnement>Débloquer avec un abonnement</button><button class="btn gris" id="bqAutre">Ouvrir une autre boutique</button></div>'
+        : '<p>Le propriétaire de cette boutique doit renouveler ou améliorer son abonnement. Vos ventes déjà faites sont conservées.</p><p class="petit">Prévenez votre patron.</p>') +
+      '</div>';
+    const b = $('#bqAutre', vue); if (b) b.addEventListener('click', () => App.aller('boutiques'));
+  }
+  const nbVerrouilles = () => ensembles ? { produits: ensembles.products.size, clients: ensembles.customers.size, fournisseurs: ensembles.suppliers.size } : { produits: 0, clients: 0, fournisseurs: 0 };
+  function expliquerVerrou(type) {
+    const nom = { produits: 'Ce produit', clients: 'Ce client', fournisseurs: 'Ce fournisseur' }[type] || 'Cet élément';
+    const lim = limite(TYPE_LIMITE[type]);
+    proposer('🔒 Verrouillé par votre niveau', nom + ' dépasse la limite de ' + (lim === null ? '' : lim + ' ') + NOM_LIMITE[TYPE_LIMITE[type]] + ' de votre niveau actuel (' + ((info && info.name) || 'Gratuit') + '). ' +
+      'Il n’est pas supprimé : il redevient utilisable dès que le patron passe à un niveau supérieur. Vous pouvez aussi supprimer des éléments inutiles pour libérer de la place.');
+  }
 
   async function utilisation(k) {
     if (k === 'products') return (await DB.tout('produits')).filter((p) => p.actif !== false).length;
@@ -78,6 +113,16 @@ const Abonnement = (() => {
     } else if (info.tier !== 'free' && info.days_left != null && info.days_left <= 7) {
       h += '<div class="bandeau"><b>Votre abonnement ' + esc(info.name) + ' se termine ' + (info.days_left <= 0 ? 'aujourd’hui' : 'dans ' + info.days_left + ' jour' + (info.days_left > 1 ? 's' : '')) + '.</b> Renouvelez-le pour garder vos fonctions.' +
         '<button class="btn contour" data-aller-abonnement style="margin-top:8px">Renouveler</button></div>';
+    }
+    if (info.shop_locked) h += '<div class="bandeau rouge"><b>🔒 Cette boutique est verrouillée par votre niveau.</b> Ouvrez une autre boutique ou passez à un niveau supérieur.<button class="btn contour" data-aller-abonnement style="margin-top:8px">Débloquer</button></div>';
+    const v = nbVerrouilles();
+    if (v.produits + v.clients + v.fournisseurs > 0) {
+      const parts = [];
+      if (v.produits) parts.push(v.produits + ' produit' + (v.produits > 1 ? 's' : ''));
+      if (v.clients) parts.push(v.clients + ' client' + (v.clients > 1 ? 's' : ''));
+      if (v.fournisseurs) parts.push(v.fournisseurs + ' fournisseur' + (v.fournisseurs > 1 ? 's' : ''));
+      h += '<div class="bandeau"><b>🔒 ' + parts.join(', ') + ' verrouillé' + ((v.produits + v.clients + v.fournisseurs) > 1 ? 's' : '') + '.</b> Votre niveau ' + esc(info.name) + ' a des limites : le surplus n’est pas supprimé, il est seulement inutilisable. Il se débloque dès que vous passez à un niveau supérieur.' +
+        '<button class="btn contour" data-aller-abonnement style="margin-top:8px">Débloquer</button></div>';
     }
     if (info.usage && info.usage.sellers_suspended > 0) {
       h += '<div class="bandeau rouge"><b>' + info.usage.sellers_suspended + ' vendeur(s) suspendu(s)</b> : votre niveau actuel permet moins de vendeurs.' +
@@ -133,10 +178,10 @@ const Abonnement = (() => {
   function arreter() {
     if (minuteur) clearInterval(minuteur); minuteur = null;
     if (ecouteurs) { window.removeEventListener('online', ecouteurs); document.removeEventListener('visibilitychange', ecouteurs); ecouteurs = null; }
-    info = null;
+    info = null; ensembles = null;
   }
 
-  return { charger, donnees, tier, peut, limite, utilisation, exiger, verifierLimite, proposer, pageBloquee, bandeau, plans, prixTexte,
+  return { charger, donnees, tier, peut, limite, utilisation, exiger, verifierLimite, verrouille, nbVerrouilles, boutiqueVerrouillee, boutiqueBloquee, expliquerVerrou, proposer, pageBloquee, bandeau, plans, prixTexte,
     payer, lireRetourPaiement, paiementEnAttente, oublierPaiement, statutPaiement, demarrer, arreter, NIVEAU_MIN, NOM_LIMITE };
 })();
 window.Abonnement = Abonnement;
@@ -171,26 +216,44 @@ const VueAbonnement = {
 
   async afficher(conteneur) {
     this.conteneur = conteneur;
-    conteneur.innerHTML = App.htmlRetour() + '<h2>Mon abonnement</h2><p class="petit">Chargement…</p>';
+    // Affichage IMMÉDIAT avec les dernières informations gardées sur l'appareil, puis mise à jour en arrière-plan
+    const plansCache = await DB.lireParam('plansCache', null);
+    if (Abonnement.donnees() && (plansCache || this.plans)) {
+      this.plans = plansCache || this.plans;
+      this.dessiner();
+      const id0 = Abonnement.paiementEnAttente();
+      if (id0) this.suivre(id0);
+      this.actualiser(false);
+      return;
+    }
+    conteneur.innerHTML = App.htmlRetour() + '<h2>Mon abonnement</h2><div class="chargement-ecran"><span class="rond"></span><span>Chargement…</span></div>';
+    await this.actualiser(true);
+  },
+
+  // Recharge l'abonnement et les niveaux depuis le serveur. « premier » = rien n'est encore affiché.
+  async actualiser(premier) {
+    const conteneur = this.conteneur;
     let plans;
     try {
-      await Abonnement.charger();
-      plans = await Abonnement.plans();
+      const [, p] = await Promise.all([Abonnement.charger(), Abonnement.plans()]);
+      plans = p;
     } catch (e) {
-      conteneur.innerHTML = App.htmlRetour() + '<h2>Mon abonnement</h2><div class="bandeau rouge">' + esc(Reseau.traduire(e)) + '</div>';
+      if (premier) conteneur.innerHTML = App.htmlRetour() + '<h2>Mon abonnement</h2><div class="bandeau rouge">' + esc(Reseau.traduire(e)) + '<button class="btn contour" id="abReessayer" style="margin-top:8px">Réessayer</button></div>';
+      const r0 = $('#abReessayer', conteneur); if (r0) r0.addEventListener('click', () => this.afficher(conteneur));
       return;
     }
     this.plans = plans;
     if (!Abonnement.donnees()) {
-      conteneur.innerHTML = App.htmlRetour() + '<h2>Mon abonnement</h2><div class="bandeau rouge">' +
-        (navigator.onLine ? 'Votre abonnement n’a pas pu être lu pour le moment. Réessayez dans un instant.' : esc(Reseau.MESSAGE)) +
-        '<button class="btn contour" id="abReessayer" style="margin-top:8px">Réessayer</button></div>';
-      $('#abReessayer', conteneur).addEventListener('click', () => this.afficher(conteneur));
+      if (premier) {
+        conteneur.innerHTML = App.htmlRetour() + '<h2>Mon abonnement</h2><div class="bandeau rouge">' +
+          (navigator.onLine ? 'Votre abonnement n’a pas pu être lu pour le moment. Réessayez dans un instant.' : esc(Reseau.MESSAGE)) +
+          '<button class="btn contour" id="abReessayer" style="margin-top:8px">Réessayer</button></div>';
+        $('#abReessayer', conteneur).addEventListener('click', () => this.afficher(conteneur));
+      }
       return;
     }
-    this.dessiner();
-    const id = Abonnement.paiementEnAttente();
-    if (id) this.suivre(id);
+    if (App.onglet === 'abonnement' && !document.querySelector('.fond-fenetre')) this.dessiner();
+    if (premier) { const id = Abonnement.paiementEnAttente(); if (id) this.suivre(id); }
   },
 
   dessiner() {
@@ -199,14 +262,17 @@ const VueAbonnement = {
     const barre = (cle, titre) => {
       const lim = info.limits && info.limits[cle] != null ? Number(info.limits[cle]) : null, util = Number((info.usage || {})[cle]) || 0;
       const pct = lim === null ? 0 : (lim === 0 ? 100 : Math.min(100, Math.round(util * 100 / lim)));
+      const verr = { products: 'produits', customers: 'clients', suppliers: 'fournisseurs' }[cle];
+      const nbv = verr ? Abonnement.nbVerrouilles()[verr] : 0;
       return '<div class="ab-ligne"><div class="ab-tete"><span>' + titre + '</span><b>' + util + ' / ' + (lim === null ? 'illimité' : lim) + '</b></div>' +
+        (nbv ? '<div class="petit rouge-txt" style="margin:2px 0 4px">🔒 ' + nbv + ' verrouillé' + (nbv > 1 ? 's' : '') + ' (conservé' + (nbv > 1 ? 's' : '') + ', inutilisable' + (nbv > 1 ? 's' : '') + ' jusqu’au niveau supérieur)</div>' : '') +
         '<div class="ab-barre"><div class="ab-rempli' + (pct >= 90 ? ' plein' : '') + '" style="width:' + (lim === null ? 8 : pct) + '%"></div></div></div>';
     };
     const fin = info.period_end ? formatDate(new Date(info.period_end).getTime()) : null;
     let html = App.htmlRetour() + '<h2>Mon abonnement</h2>' +
       '<div id="abSuivi"></div>' +
       '<div class="carte"><div class="ab-niveau">' + (info.is_trial ? '🎁 Essai gratuit : <b>' + esc(info.name) + '</b>' : 'Niveau actuel : <b>' + esc(info.name) + '</b>') + '</div>' +
-      (info.tier !== 'free' && fin ? '<p class="petit">' + (info.is_trial ? 'Essai jusqu’au ' : 'Actif jusqu’au ') + '<b>' + esc(fin) + '</b> (' + info.days_left + ' jour' + (info.days_left > 1 ? 's' : '') + ' restant' + (info.days_left > 1 ? 's' : '') + ').' + (info.is_trial ? ' Ensuite, retour au niveau Gratuit : vos données sont conservées, mais ses limites s’appliquent (par exemple 2 vendeurs actifs).' : '') + '</p>' : '<p class="petit">Niveau gratuit : vos données restent en ligne et sauvegardées.</p>') +
+      (info.tier !== 'free' && fin ? '<p class="petit">' + (info.is_trial ? 'Essai jusqu’au ' : 'Actif jusqu’au ') + '<b>' + esc(fin) + '</b> (' + info.days_left + ' jour' + (info.days_left > 1 ? 's' : '') + ' restant' + (info.days_left > 1 ? 's' : '') + ').' + (info.is_trial ? ' Ensuite, retour au niveau Gratuit : vos données sont conservées, mais ses limites s’appliquent : au-delà de la limite, les produits, clients et fournisseurs en trop sont verrouillés (pas supprimés) jusqu’au prochain abonnement.' : '') + '</p>' : '<p class="petit">Niveau gratuit : vos données restent en ligne et sauvegardées.</p>') +
       barre('shops', 'Boutiques') + barre('sellers', 'Vendeurs') + barre('products', 'Produits (cette boutique)') + barre('customers', 'Clients à crédit (cette boutique)') + barre('suppliers', 'Fournisseurs (cette boutique)') +
       (info.usage && info.usage.sellers_suspended > 0 ? '<p class="petit rouge-txt">' + info.usage.sellers_suspended + ' vendeur(s) suspendu(s) : ils retrouvent l’accès dès que votre niveau le permet.</p>' : '') +
       '</div>' +

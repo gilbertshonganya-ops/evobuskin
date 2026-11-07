@@ -43,7 +43,7 @@ const VueAchats = {
     } else {
       zone.innerHTML = '<button class="btn" id="btnFour" style="margin-bottom:12px">+ Nouveau fournisseur</button>' +
         (fournisseurs.length ? '<div class="liste">' + fournisseurs.map((f) => ({ f, s: this.soldeF(f.id) })).sort((a, b) => b.s - a.s).map((x) =>
-          '<div class="ligne" data-id="' + x.f.id + '"><div><div class="nom">' + esc(x.f.nom) + '</div><div class="sous">' + esc(x.f.tel || 'Pas de téléphone') + '</div></div>' +
+          '<div class="ligne' + (Abonnement.verrouille('fournisseurs', x.f) ? ' verrouille' : '') + '" data-id="' + x.f.id + '"><div><div class="nom">' + (Abonnement.verrouille('fournisseurs', x.f) ? '🔒 ' : '') + esc(x.f.nom) + '</div><div class="sous">' + esc(x.f.tel || 'Pas de téléphone') + (Abonnement.verrouille('fournisseurs', x.f) ? ' &middot; verrouillé par votre niveau' : '') + '</div></div>' +
           '<div class="droite">' + (x.s > 0.005 ? '<span class="rouge-txt gras">' + formatUSD(x.s) + '</span>' : '<span class="badge">À jour</span>') + '</div></div>').join('') + '</div>'
           : '<div class="vide">Aucun fournisseur.</div>');
       $('#btnFour').addEventListener('click', () => this.formulaireFournisseur(null));
@@ -53,6 +53,7 @@ const VueAchats = {
   },
 
   formulaireFournisseur(f0) {
+    if (f0 && Abonnement.verrouille('fournisseurs', f0)) { Abonnement.expliquerVerrou('fournisseurs'); return; }
     const f = ouvrirFenetre(f0 ? 'Modifier le fournisseur' : 'Nouveau fournisseur',
       '<label class="champ"><span>Nom *</span><input id="fNom" autocomplete="off" value="' + esc(f0 ? f0.nom : '') + '"></label>' +
       '<label class="champ"><span>Téléphone</span><input id="fTel" inputmode="tel" maxlength="17" autocomplete="off" placeholder="Ex : 0895006995" value="' + esc(f0 ? f0.tel : '') + '"></label>' +
@@ -100,7 +101,7 @@ const VueAchats = {
   // Chaque ligne est soit un produit déjà en boutique, soit un NOUVEAU produit (créé en stock dès l'achat,
   // son prix de vente sera fixé plus tard dans Stock).
   async formulaireAchat() {
-    const produits = (await DB.tout('produits')).filter((p) => p.actif !== false).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+    const produits = (await DB.tout('produits')).filter((p) => p.actif !== false && !Abonnement.verrouille('produits', p)).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
     const taux = App.taux();
     const nouvelleLigne = () => ({ produitId: '', nouveau: null, qte: '', prix: '' });
     const lignes = [nouvelleLigne()];
@@ -108,7 +109,9 @@ const VueAchats = {
 
     const f = ouvrirFenetre('Nouvel achat',
       '<label class="champ"><span>Fournisseur</span><select id="aF"><option value="">-- Sans fournisseur --</option>' +
-        this.fournisseurs.map((x) => '<option value="' + x.id + '">' + esc(x.nom) + '</option>').join('') + '<option value="new">+ Nouveau fournisseur</option></select></label>' +
+        this.fournisseurs.map((x) => Abonnement.verrouille('fournisseurs', x)
+          ? '<option value="' + x.id + '" disabled>🔒 ' + esc(x.nom) + ' (verrouillé)</option>'
+          : '<option value="' + x.id + '">' + esc(x.nom) + '</option>').join('') + '<option value="new">+ Nouveau fournisseur</option></select></label>' +
       '<div id="aNouveau" hidden><div class="deux-colonnes"><label class="champ"><span>Nom</span><input id="aNom" autocomplete="off"></label>' +
         '<label class="champ"><span>Téléphone</span><input id="aTel" inputmode="tel" maxlength="17" autocomplete="off" placeholder="0895006995"></label></div></div>' +
       '<h3 style="margin:4px 0 8px">Produits achetés</h3><div id="aLignes"></div>' +
