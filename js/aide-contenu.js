@@ -7,7 +7,7 @@ const AIDE_CONTENU = {
   sections: [
 
     /* =============================================================== 1. DÉMARRER */
-    { id: 'demarrer', icone: '🚀', titre: 'Bien démarrer', resume: 'Créer votre compte, vous connecter, comprendre l’écran, travailler sans Internet.', sujets: [
+    { id: 'demarrer', icone: 'rocket-launch', titre: 'Bien démarrer', resume: 'Créer votre compte, vous connecter, comprendre l’écran, travailler sans Internet.', sujets: [
       { id: 'ecran', t: 'Comprendre l’écran et le menu', pub: 'tous', mots: 'menu navigation boutons barre haut bas interface',
         intro: 'EvoBuskin se pilote avec une barre en haut et un menu en bas. Tout le reste s’ouvre en touchant.',
         etapes: [
@@ -23,9 +23,9 @@ const AIDE_CONTENU = {
       { id: 'creer-compte', t: 'Créer mon compte propriétaire (patron)', pub: 'tous', mots: 'inscription créer compte propriétaire patron boutique email mot de passe',
         intro: 'Le propriétaire crée le compte et la première boutique. Il est le seul à voir les finances (rapports, achats, dépenses, réglages).',
         etapes: [
-          'Ouvrez l’adresse de l’application dans le navigateur de votre téléphone.',
+          'Ouvrez l’application <b>EvoBuskin</b> sur votre téléphone.',
           'Sur l’écran de connexion, touchez [[Créer un compte]].',
-          'Choisissez la carte [[👑 Propriétaire]] (« Je crée et gère ma boutique »).',
+          'Choisissez la carte [[Propriétaire]] (« Je crée et gère ma boutique »).',
           'Remplissez {{Nom complet}}, {{Adresse email}} (une adresse que vous consultez vraiment) et {{Nom de la boutique}} (par exemple « Boutique Gilbert »).',
           'Choisissez un {{mot de passe}} d’<b>au moins 12 caractères</b> avec une majuscule, une minuscule, un chiffre et un caractère spécial (par exemple <i>Boutique#2026a</i>), puis répétez-le. Le bouton [[👁]] permet de vérifier ce que vous tapez.',
           'Cochez la case qui accepte les <b>conditions d’utilisation</b> et la <b>politique de confidentialité</b>.',
@@ -40,8 +40,8 @@ const AIDE_CONTENU = {
         intro: 'Un vendeur ne peut pas créer de boutique : il rejoint celle de son patron grâce à un code d’invitation à usage unique.',
         etapes: [
           'Demandez à votre patron de vous envoyer l’invitation (un <b>lien</b> et un <b>code</b>, souvent par WhatsApp).',
-          'Ouvrez le lien : l’écran « Créer votre compte » s’affiche. Sinon, ouvrez l’application et touchez [[Créer un compte]].',
-          'Choisissez la carte [[🧾 Vendeur]] (« Je rejoins une boutique avec une invitation »).',
+          'Ouvrez l’application EvoBuskin (installée depuis le Play Store) puis touchez [[Créer un compte]].',
+          'Choisissez la carte [[Vendeur]] (« Je rejoins une boutique avec une invitation »).',
           'Remplissez {{Nom complet}}, {{Adresse email}} et {{Code d’invitation}} (collez le code reçu).',
           'Choisissez votre mot de passe (12 caractères minimum, majuscule, minuscule, chiffre, caractère spécial) et répétez-le.',
           'Cochez les conditions puis touchez [[Créer mon compte]].'
@@ -69,14 +69,15 @@ const AIDE_CONTENU = {
         ],
         attention: 'Ne désinstallez pas Google Authenticator sans avoir noté votre accès de secours. Les codes changent toutes les 30 secondes : tapez-le rapidement.' },
 
-      { id: 'installer', t: 'Installer l’application sur l’écran d’accueil', pub: 'tous', mots: 'installer pwa écran accueil raccourci chrome',
+      { id: 'installer', t: 'Installer et mettre à jour l’application', pub: 'tous', mots: 'installer play store télécharger application mise à jour android téléphone',
         etapes: [
-          'Ouvrez l’adresse de l’application dans <b>Chrome</b> (Android).',
-          'Touchez le menu du navigateur (les trois points <b>⋮</b>).',
-          'Touchez [[Ajouter à l’écran d’accueil]] ou [[Installer l’application]], puis confirmez.',
-          'Une icône EvoBuskin apparaît sur votre écran d’accueil : touchez-la pour ouvrir l’application comme n’importe quelle autre.'
+          'Sur votre téléphone Android, ouvrez le <b>Play Store</b>.',
+          'Tapez <b>EvoBuskin</b> dans la recherche et touchez l’application.',
+          'Touchez [[Installer]] et attendez la fin du téléchargement.',
+          'Touchez [[Ouvrir]], ou l’icône <b>EvoBuskin</b> apparue sur votre écran d’accueil.',
+          'Pour les mises à jour : Play Store → votre photo de profil → [[Gérer les applications et l’appareil]] → [[Mises à jour disponibles]] → [[Mettre à jour]] à côté d’EvoBuskin. Vous pouvez aussi activer la mise à jour automatique sur la page de l’application.'
         ],
-        astuce: 'Quand une nouvelle version existe, fermez complètement l’application et rouvrez-la <b>deux fois</b> : la mise à jour se télécharge à la première ouverture et s’active à la seconde.' },
+        astuce: 'Gardez l’application à jour : chaque version apporte des améliorations et des corrections. Vos données ne sont pas perdues lors d’une mise à jour.' },
 
       { id: 'config-initiale', t: 'Les 6 premières choses à faire (patron)', pub: 'patron', mots: 'configuration première démarrage checklist commencer débuter',
         intro: 'Dans cet ordre, vous serez prêt à vendre en 15 minutes.',
@@ -102,7 +103,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 2. CAISSE */
-    { id: 'caisse', icone: '🛒', titre: 'Vendre (Caisse)', resume: 'Espèces, Mobile Money, vente à crédit, panier, cartons, reçu WhatsApp, annulation.', sujets: [
+    { id: 'caisse', icone: 'cart', titre: 'Vendre (Caisse)', resume: 'Espèces, Mobile Money, vente à crédit, panier, cartons, reçu WhatsApp, annulation.', sujets: [
       { id: 'vente-especes', t: 'Faire une vente en espèces', pub: 'tous', mots: 'vendre vente caisse espèces encaisser panier payer',
         etapes: [
           'Touchez [[Caisse]] dans le menu du bas.',
@@ -189,7 +190,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 3. STOCK */
-    { id: 'stock', icone: '📦', titre: 'Stock et produits', resume: 'Ajouter, modifier, entrées et sorties, alertes, gros et cartons, inventaire, import.', sujets: [
+    { id: 'stock', icone: 'package-variant-closed', titre: 'Stock et produits', resume: 'Ajouter, modifier, entrées et sorties, alertes, gros et cartons, inventaire, import.', sujets: [
       { id: 'ajouter-produit', t: 'Ajouter un produit', pub: 'patron', mots: 'ajouter créer produit nouveau article prix stock catégorie code-barres',
         etapes: [
           'Touchez [[Stock]] puis le bouton [[+]] à droite de la recherche.',
@@ -294,7 +295,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 4. DETTES */
-    { id: 'dettes', icone: '📒', titre: 'Dettes des clients', resume: 'Clients, paiements, anciennes dettes, rappels WhatsApp.', sujets: [
+    { id: 'dettes', icone: 'notebook-outline', titre: 'Dettes des clients', resume: 'Clients, paiements, anciennes dettes, rappels WhatsApp.', sujets: [
       { id: 'dettes-ajouter-client', t: 'Ajouter un client', pub: 'tous', mots: 'client ajouter nouveau créer téléphone',
         etapes: [
           'Touchez [[Dettes]] puis [[+]].',
@@ -352,7 +353,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 5. ACHATS */
-    { id: 'achats', icone: '🚚', titre: 'Achats et fournisseurs', resume: 'Enregistrer vos achats, remplir le stock, suivre ce que vous devez.', sujets: [
+    { id: 'achats', icone: 'truck-delivery', titre: 'Achats et fournisseurs', resume: 'Enregistrer vos achats, remplir le stock, suivre ce que vous devez.', sujets: [
       { id: 'fournisseur-ajouter', t: 'Ajouter un fournisseur', pub: 'patron', mots: 'fournisseur ajouter créer',
         intro: 'Fonction du niveau Pro.',
         etapes: [
@@ -384,7 +385,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 6. DEPENSES */
-    { id: 'depenses', icone: '💸', titre: 'Dépenses', resume: 'Noter loyer, transport, salaires… pour connaître votre vrai bénéfice.', sujets: [
+    { id: 'depenses', icone: 'cash-multiple', titre: 'Dépenses', resume: 'Noter loyer, transport, salaires… pour connaître votre vrai bénéfice.', sujets: [
       { id: 'depense-ajouter', t: 'Enregistrer une dépense', pub: 'patron', mots: 'dépense loyer transport électricité salaire frais',
         intro: 'Fonction du niveau Pro.',
         etapes: [
@@ -407,7 +408,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 7. RAPPORTS */
-    { id: 'rapports', icone: '📊', titre: 'Rapports et chiffres', resume: 'Lire et interpréter vos résultats, choisir une période, PDF et exports.', sujets: [
+    { id: 'rapports', icone: 'chart-box', titre: 'Rapports et chiffres', resume: 'Lire et interpréter vos résultats, choisir une période, PDF et exports.', sujets: [
       { id: 'periode', t: 'Changer la période affichée', pub: 'patron', mots: 'période date calendrier aujourd’hui mois semaine rapports',
         etapes: [
           'En haut de [[Rapports]] (ou de [[Dépenses]]), deux boutons : [[Aujourd’hui]] et [[Autre date]].',
@@ -478,7 +479,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 8. BOUTIQUES */
-    { id: 'boutiques', icone: '🏪', titre: 'Plusieurs boutiques', resume: 'Créer une seconde boutique, passer de l’une à l’autre, renommer.', sujets: [
+    { id: 'boutiques', icone: 'store', titre: 'Plusieurs boutiques', resume: 'Créer une seconde boutique, passer de l’une à l’autre, renommer.', sujets: [
       { id: 'boutique-creer', t: 'Créer une seconde boutique', pub: 'patron', mots: 'boutique créer ajouter seconde deuxième nouvelle succursale magasin',
         intro: 'Chaque boutique a ses propres produits, clients, ventes, dettes et vendeurs. Le nombre de boutiques dépend de votre niveau.',
         etapes: [
@@ -519,7 +520,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 9. EQUIPE */
-    { id: 'equipe', icone: '👥', titre: 'Équipe et vendeurs', resume: 'Inviter, surveiller, retirer des vendeurs ; ce que chacun peut faire.', sujets: [
+    { id: 'equipe', icone: 'account-group', titre: 'Équipe et vendeurs', resume: 'Inviter, surveiller, retirer des vendeurs ; ce que chacun peut faire.', sujets: [
       { id: 'inviter-vendeur', t: 'Ajouter un vendeur (invitation)', pub: 'patron', mots: 'vendeur ajouter inviter invitation code lien employé équipe',
         intro: 'Le vendeur crée lui-même son compte avec un code à usage unique : vous n’avez jamais à connaître son mot de passe.',
         etapes: [
@@ -577,7 +578,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 10. ABONNEMENT */
-    { id: 'abonnement', icone: '⭐', titre: 'Abonnement et paiement', resume: 'Niveaux, essai gratuit, payer avec Mobile Money, limites et verrouillage.', sujets: [
+    { id: 'abonnement', icone: 'credit-card-outline', titre: 'Abonnement et paiement', resume: 'Niveaux, essai gratuit, payer avec Mobile Money, limites et verrouillage.', sujets: [
       { id: 'niveaux', t: 'Les niveaux : Gratuit, Pro, Premium', pub: 'patron', mots: 'niveaux gratuit pro premium plan abonnement prix fonctions différences',
         intro: 'Votre niveau décide des fonctions disponibles et des limites. Les valeurs ci-dessous sont indicatives : l’écran <b>Mon abonnement</b> affiche toujours celles de votre compte.',
         tableau: { entetes: ['', 'Gratuit', 'Pro', 'Premium'], lignes: [
@@ -588,9 +589,9 @@ const AIDE_CONTENU = {
           ['Clients à crédit', '10', '50', 'Illimité'],
           ['Fournisseurs', '0', '50', 'Illimité'],
           ['Journal d’activité', '7 jours', '180 jours', 'Illimité'],
-          ['Caisse, stock, dettes, rapports, hors ligne', '✓', '✓', '✓'],
-          ['Achats, dépenses, prix de gros et cartons, rappels WhatsApp, inventaire, PDF, export Excel/CSV', '✗', '✓', '✓'],
-          ['Import de produits Excel/CSV', '✗', '✗', '✓']
+          ['Caisse, stock, dettes, rapports, hors ligne', 'Oui', 'Oui', 'Oui'],
+          ['Achats, dépenses, prix de gros et cartons, rappels WhatsApp, inventaire, PDF, export Excel/CSV', 'Non', 'Oui', 'Oui'],
+          ['Import de produits Excel/CSV', 'Non', 'Non', 'Oui']
         ] },
         etapes: [
           'Ouvrez [[Plus]] → [[Mon abonnement]] pour voir votre niveau actuel, la date de fin, votre utilisation (par exemple « Produits 38 / 50 ») et les niveaux disponibles.',
@@ -599,25 +600,31 @@ const AIDE_CONTENU = {
 
       { id: 'essai', t: 'L’essai gratuit', pub: 'patron', mots: 'essai gratuit trial test découverte période',
         etapes: [
-          'À la création d’un compte, un <b>essai gratuit d’un niveau supérieur</b> peut être offert (une seule fois par compte). Un bandeau 🎁 indique les jours restants.',
+          'À la création d’un compte, un <b>essai gratuit d’un niveau supérieur</b> peut être offert (une seule fois par compte). Un bandeau « essai gratuit » indique les jours restants.',
           'Pendant l’essai, les limites du niveau d’essai s’appliquent : vous pouvez dépasser les limites du niveau Gratuit (plus de produits, de clients, de vendeurs…).',
           'À la fin, si vous n’avez pas payé, vous revenez au niveau Gratuit : <b>tout ce que vous avez saisi est conservé</b>, mais ce qui dépasse les limites du Gratuit est <b>verrouillé</b> jusqu’au prochain abonnement.'
         ],
         voir: ['limites', 'payer'] },
 
-      { id: 'payer', t: 'Payer mon abonnement avec Mobile Money', pub: 'patron', mots: 'payer abonnement paiement pawapay mobile money orange airtel mpesa activer renouveler',
+      { id: 'payer', t: 'Payer mon abonnement avec Mobile Money', pub: 'patron', mots: 'payer abonnement paiement pawapay mobile money orange airtel mpesa vodacom activer renouveler retourner marchand',
         intro: 'Le paiement se fait sur une page sécurisée du prestataire de paiement <b>pawaPay</b>. Vos codes secrets ne sont jamais saisis dans EvoBuskin.',
         etapes: [
           'Vérifiez que vous avez Internet, puis touchez [[Plus]] → [[Mon abonnement]].',
           'Choisissez la durée : <b>1 mois</b>, <b>3 mois</b> ou <b>12 mois</b>.',
           'Sur la carte du niveau voulu (Pro ou Premium), touchez [[Choisir Pro]] (ou [[Choisir Premium]]).',
-          'Une fenêtre « Payer : Pro » résume le {{Niveau}}, la {{Durée}} et le {{Montant}} (en francs et en dollars). Touchez [[Payer 12 500 FC]] (le montant affiché).',
-          'L’application vous envoie sur la <b>page sécurisée de paiement</b>. Choisissez votre <b>opérateur</b> (Orange Money, Airtel Money ou M-Pesa) et tapez votre numéro (avec l’indicatif 243).',
-          'Confirmez le paiement sur votre téléphone (message ou code de l’opérateur).',
-          'Revenez dans l’application (elle s’ouvre toute seule à la fin). Le message « Vérification de votre paiement… » s’affiche puis <b>« ✅ Paiement confirmé »</b>.'
+          'Une fenêtre « Payer » résume le {{Niveau}}, la {{Durée}} et le {{Montant}}. Touchez [[Payer 12 500 FC]] (le montant affiché).',
+          'La <b>page de paiement pawaPay</b> s’ouvre (première image ci-dessous). Elle rappelle le bénéficiaire (EvoBuskin), l’abonnement choisi et le {{Montant}}.',
+          'Dans {{Numéro de téléphone}}, tapez votre numéro Mobile Money. L’indicatif <b>+243</b> est déjà choisi : tapez le numéro <b>sans le 0 du début</b>. <b>L’opérateur (Airtel, Orange ou Vodacom M-Pesa) est choisi automatiquement</b> d’après votre numéro.',
+          'Touchez [[Payer]], puis confirmez sur votre téléphone avec votre code secret Mobile Money quand l’opérateur vous le demande.',
+          'Quand le paiement est reçu, la page « <b>Paiement réussi</b> » s’affiche (deuxième image ci-dessous). Touchez [[Retourner chez le marchand]].',
+          'Vous revenez dans EvoBuskin : « Vérification de votre paiement… » puis <b>« Paiement confirmé »</b>. L’abonnement est activé.'
+        ],
+        images: [
+          { src: 'img/aide-pawapay-1.jpg', legende: 'Étape 5 et 6 : la page de paiement pawaPay. Tapez votre numéro ; l’opérateur se choisit tout seul.' },
+          { src: 'img/aide-pawapay-2.jpg', legende: 'Étape 8 : paiement reçu. Touchez « Retourner chez le marchand » pour revenir dans EvoBuskin.' }
         ],
         apres: 'Votre niveau est activé immédiatement ; les éléments verrouillés sont débloqués. La date de fin est affichée dans « Mon abonnement ».',
-        attention: 'Seul le <b>Mobile Money</b> est accepté (pas de carte bancaire). Le montant est fixé par le serveur : il ne peut pas être modifié depuis le téléphone. Si le paiement est en attente, ne payez pas une 2ᵉ fois : voir « Paiement en attente ou échoué ».',
+        attention: 'Seul le <b>Mobile Money</b> est accepté (pas de carte bancaire). Le montant est fixé par le serveur : il ne peut pas être modifié depuis le téléphone. N’oubliez pas de toucher « Retourner chez le marchand ». Si le paiement est en attente, ne payez pas une 2ᵉ fois : voir « Paiement en attente ou échoué ».',
         voir: ['paiement-attente', 'limites'] },
 
       { id: 'paiement-attente', t: 'Paiement en attente, échoué ou non confirmé', pub: 'patron', mots: 'paiement attente échoué non confirmé problème vérifier maintenant débité',
@@ -656,7 +663,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 11. REGLAGES */
-    { id: 'reglages', icone: '⚙️', titre: 'Réglages et sécurité', resume: 'Boutique, taux de change, sauvegarde, mot de passe, suppression de compte.', sujets: [
+    { id: 'reglages', icone: 'cog-outline', titre: 'Réglages et sécurité', resume: 'Boutique, taux de change, sauvegarde, mot de passe, suppression de compte.', sujets: [
       { id: 'boutique-infos', t: 'Nom et téléphone de la boutique (reçus)', pub: 'patron', mots: 'nom boutique téléphone reçu réglages',
         etapes: [
           '[[Plus]] → [[Réglages]] → carte {{Ma boutique}}.',
@@ -676,11 +683,11 @@ const AIDE_CONTENU = {
       { id: 'sauvegarde', t: 'Faire une sauvegarde et la restaurer', pub: 'patron', mots: 'sauvegarde backup restaurer exporter fichier mot de passe chiffré',
         etapes: [
           '[[Plus]] → [[Réglages]] → carte {{Sauvegarde}}.',
-          '[[Sauvegarde simple (non protégée)]] crée un fichier lisible. [[Sauvegarde protégée par mot de passe]] le chiffre : choisissez un {{Mot de passe}} d’au moins 6 caractères, répétez-le et touchez [[Valider]].',
-          'Gardez le fichier en lieu sûr (Google Drive, WhatsApp à vous-même, ordinateur).',
+          'Touchez [[Sauvegarder]] : un fichier de sauvegarde est créé sur votre téléphone.',
+          'Gardez ce fichier en lieu sûr (Google Drive, WhatsApp à vous-même, ordinateur).',
           'Pour restaurer : [[Restaurer une sauvegarde]], choisissez le fichier, confirmez. <b>Attention : cela remplace les données actuelles de l’appareil.</b>'
         ],
-        attention: 'Sans le mot de passe, personne ne peut rouvrir une sauvegarde protégée, pas même nous. Vos données sont déjà sauvegardées en ligne ; ce fichier est une sécurité supplémentaire.' },
+        attention: 'Vos données sont déjà sauvegardées en ligne ; ce fichier est une sécurité supplémentaire.' },
 
       { id: 'mot-de-passe', t: 'Changer mon mot de passe', pub: 'tous', mots: 'mot de passe changer modifier sécurité',
         etapes: [
@@ -710,22 +717,21 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 12. DEPANNAGE */
-    { id: 'depannage', icone: '🛠️', titre: 'Dépannage : en cas de problème', resume: 'Les messages d’erreur les plus courants et quoi faire.', sujets: [
+    { id: 'depannage', icone: 'wrench-outline', titre: 'Dépannage : en cas de problème', resume: 'Les messages d’erreur les plus courants et quoi faire.', sujets: [
       { id: 'depannage-chargement', t: 'L’écran reste sur « Chargement… » ou les données sont lentes', pub: 'tous', mots: 'chargement lent lenteur bloqué attend écran',
         etapes: [
           'Les écrans s’affichent d’abord avec les données déjà présentes sur le téléphone ; la mise à jour se fait ensuite en arrière-plan. Attendez quelques secondes.',
           'Vérifiez le voyant en haut à droite : si vous êtes sans Internet, l’application travaille avec ce qu’elle a.',
           'Passez de Wi-Fi à données mobiles (ou inversement), puis touchez [[Réessayer]] si ce bouton apparaît.',
-          'Fermez complètement l’application et rouvrez-la (deux fois après une mise à jour).',
-          'Si le problème persiste : Réglages → [[Copier le rapport pour le support]] et envoyez-le au support.'
+          'Fermez complètement l’application et rouvrez-la. Vérifiez aussi sur le Play Store qu’aucune mise à jour n’est disponible.',
+          'Si le problème persiste, utilisez le formulaire « Contacter le support » en bas de cette Aide.'
         ] },
 
       { id: 'depannage-erreur', t: 'Un message d’erreur ou de connexion s’affiche', pub: 'tous', mots: 'erreur survenue connexion réessayer problème message vérifiez',
         etapes: [
           'Si Internet est lent ou coupé, c’est normal : vos ventes continuent d’être enregistrées sur le téléphone et seront envoyées plus tard.',
           'Touchez [[Réessayer]] ; sinon revenez au menu et rouvrez l’écran.',
-          'Si le message revient avec une <b>autre phrase</b> (par exemple « verrouillé », « limite », « accès refusé »), lisez-la : elle dit exactement quoi faire (voir « Limites et verrouillage »).',
-          'Le problème vient d’un <b>fichier ouvert depuis l’ordinateur</b> ? Ouvrez toujours l’application depuis son adresse web (https://…) et non depuis un fichier du bureau.'
+          'Si le message parle de <b>verrouillage</b>, de <b>limite</b> ou d’<b>accès refusé</b>, lisez-le : il dit exactement quoi faire (voir « Limites et verrouillage »).',
         ] },
 
       { id: 'depannage-sync', t: 'Mes ventes n’apparaissent pas sur l’autre téléphone', pub: 'tous', mots: 'synchronisation autre téléphone ventes manquantes différent envoi attente',
@@ -741,7 +747,7 @@ const AIDE_CONTENU = {
           'Vérifiez que le code est copié en entier, sans espace.',
           'Un code ne marche qu’<b>une seule fois</b> et expire (24 heures ou 7 jours). Demandez-en un nouveau au patron.',
           'Le patron peut avoir atteint la limite de vendeurs de son niveau : il doit passer au niveau supérieur ou retirer un accès.',
-          'Choisissez bien la carte [[🧾 Vendeur]] à l’inscription (pas Propriétaire).'
+          'Choisissez bien la carte [[Vendeur]] à l’inscription (pas Propriétaire).'
         ] },
 
       { id: 'depannage-limite', t: '« Limite atteinte » ou « Verrouillé »', pub: 'tous', mots: 'limite atteinte verrouillé niveau abonnement ajouter impossible',
@@ -773,8 +779,7 @@ const AIDE_CONTENU = {
       { id: 'depannage-whatsapp', t: 'WhatsApp ne s’ouvre pas', pub: 'tous', mots: 'whatsapp ne s’ouvre pas reçu rappel numéro',
         etapes: [
           'Vérifiez que WhatsApp est installé sur le téléphone.',
-          'Vérifiez que le client a un numéro enregistré (fiche client).',
-          'Autorisez l’ouverture de liens externes si le navigateur le demande.'
+          'Vérifiez que le client a un numéro enregistré (fiche client).'
         ] },
 
       { id: 'depannage-appareil', t: 'Message « Cet appareil contient déjà les données d’une autre boutique »', pub: 'tous', mots: 'appareil autre boutique mélanger données téléphone partagé',
@@ -793,7 +798,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 13. GLOSSAIRE */
-    { id: 'glossaire', icone: '📖', titre: 'Glossaire', resume: 'Les mots utilisés dans l’application, expliqués simplement.', glossaire: [
+    { id: 'glossaire', icone: 'book-alphabet', titre: 'Mots expliqués', resume: 'Le sens des mots utilisés dans l’application, expliqué simplement.', glossaire: [
       ['Panier', 'La liste des articles du client avant de payer.'],
       ['Encaisser', 'Recevoir l’argent du client et enregistrer la vente.'],
       ['Acompte', 'Une partie du prix payée tout de suite quand le reste est à crédit.'],
@@ -823,7 +828,7 @@ const AIDE_CONTENU = {
     ] },
 
     /* =============================================================== 14. FAQ */
-    { id: 'faq', icone: '❓', titre: 'Questions fréquentes', resume: 'Les réponses rapides aux questions qu’on se pose le plus.', faq: [
+    { id: 'faq', icone: 'help-circle-outline', titre: 'Questions fréquentes', resume: 'Les réponses rapides aux questions qu’on se pose le plus.', faq: [
       ['Puis-je utiliser EvoBuskin sur plusieurs téléphones ?', 'Oui. Connectez-vous avec le même compte (ou invitez des vendeurs) : les données se synchronisent automatiquement dès qu’il y a Internet.'],
       ['Que se passe-t-il si je perds mon téléphone ?', 'Rien n’est perdu : vos données sont en ligne. Connectez-vous sur un autre téléphone avec votre email et votre mot de passe.'],
       ['Mes données sont-elles supprimées si mon abonnement se termine ?', 'Non. Vous revenez au niveau Gratuit. Ce qui dépasse ses limites est verrouillé, pas supprimé, et se débloque quand vous payez.'],
@@ -841,9 +846,9 @@ const AIDE_CONTENU = {
 
   // Accès rapides « Je veux… » (id du sujet à ouvrir)
   rapide: [
-    ['🛒', 'Vendre', 'vente-especes'], ['📦', 'Ajouter un produit', 'ajouter-produit'], ['📒', 'Encaisser une dette', 'dettes-paiement'],
-    ['⭐', 'Payer l’abonnement', 'payer'], ['👥', 'Ajouter un vendeur', 'inviter-vendeur'], ['🏪', 'Créer une boutique', 'boutique-creer'],
-    ['📊', 'Lire mes rapports', 'lire-rapports'], ['🔒', 'Comprendre les limites', 'limites'], ['🛠️', 'J’ai un problème', 'depannage-erreur']
+    ['cart', 'Vendre', 'vente-especes'], ['package-variant-closed', 'Ajouter un produit', 'ajouter-produit'], ['notebook-outline', 'Encaisser une dette', 'dettes-paiement'],
+    ['credit-card-outline', 'Payer l’abonnement', 'payer'], ['account-plus-outline', 'Ajouter un vendeur', 'inviter-vendeur'], ['store-plus-outline', 'Créer une boutique', 'boutique-creer'],
+    ['chart-box', 'Lire mes rapports', 'lire-rapports'], ['lock-outline', 'Comprendre les limites', 'limites'], ['wrench-outline', 'J’ai un problème', 'depannage-erreur']
   ],
 
   // Parcours conseillé pour un débutant

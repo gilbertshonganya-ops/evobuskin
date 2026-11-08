@@ -2,7 +2,7 @@
    pour que le support puisse trouver la vraie cause d'un problème. L'utilisateur voit un message en français
    avec un court « code », et peut copier le rapport (écran de connexion ou Réglages). */
 const Diag = (() => {
-  const CLE = 'evobuskin_diag_v1', MAX = 25, VERSION = '2.2.0';
+  const CLE = 'evobuskin_diag_v1', MAX = 25, VERSION = '2.4.0';
   let dernier = null;
   const lire = () => { try { return JSON.parse(localStorage.getItem(CLE) || '[]'); } catch (_) { return []; } };
   const nettoyer = (m) => String(m || '')

@@ -108,7 +108,7 @@ const Abonnement = (() => {
     if (!info || !App.estPatron()) return '';
     let h = '';
     if (info.is_trial) {
-      h += '<div class="bandeau"><b>🎁 Essai gratuit ' + esc(info.name) + ' : ' + (info.days_left <= 0 ? 'dernier jour' : info.days_left + ' jour' + (info.days_left > 1 ? 's' : '') + ' restant' + (info.days_left > 1 ? 's' : '')) + '.</b> Choisissez un niveau avant la fin pour garder toutes vos fonctions.' +
+      h += '<div class="bandeau"><b>Essai gratuit ' + esc(info.name) + ' : ' + (info.days_left <= 0 ? 'dernier jour' : info.days_left + ' jour' + (info.days_left > 1 ? 's' : '') + ' restant' + (info.days_left > 1 ? 's' : '')) + '.</b> Choisissez un niveau avant la fin pour garder toutes vos fonctions.' +
         '<button class="btn contour" data-aller-abonnement style="margin-top:8px">Choisir un niveau</button></div>';
     } else if (info.tier !== 'free' && info.days_left != null && info.days_left <= 7) {
       h += '<div class="bandeau"><b>Votre abonnement ' + esc(info.name) + ' se termine ' + (info.days_left <= 0 ? 'aujourd’hui' : 'dans ' + info.days_left + ' jour' + (info.days_left > 1 ? 's' : '')) + '.</b> Renouvelez-le pour garder vos fonctions.' +
@@ -271,7 +271,7 @@ const VueAbonnement = {
     const fin = info.period_end ? formatDate(new Date(info.period_end).getTime()) : null;
     let html = App.htmlRetour() + '<h2>Mon abonnement</h2>' +
       '<div id="abSuivi"></div>' +
-      '<div class="carte"><div class="ab-niveau">' + (info.is_trial ? '🎁 Essai gratuit : <b>' + esc(info.name) + '</b>' : 'Niveau actuel : <b>' + esc(info.name) + '</b>') + '</div>' +
+      '<div class="carte"><div class="ab-niveau">' + (info.is_trial ? 'Essai gratuit : <b>' + esc(info.name) + '</b>' : 'Niveau actuel : <b>' + esc(info.name) + '</b>') + '</div>' +
       (info.tier !== 'free' && fin ? '<p class="petit">' + (info.is_trial ? 'Essai jusqu’au ' : 'Actif jusqu’au ') + '<b>' + esc(fin) + '</b> (' + info.days_left + ' jour' + (info.days_left > 1 ? 's' : '') + ' restant' + (info.days_left > 1 ? 's' : '') + ').' + (info.is_trial ? ' Ensuite, retour au niveau Gratuit : vos données sont conservées, mais ses limites s’appliquent : au-delà de la limite, les produits, clients et fournisseurs en trop sont verrouillés (pas supprimés) jusqu’au prochain abonnement.' : '') + '</p>' : '<p class="petit">Niveau gratuit : vos données restent en ligne et sauvegardées.</p>') +
       barre('shops', 'Boutiques') + barre('sellers', 'Vendeurs') + barre('products', 'Produits (cette boutique)') + barre('customers', 'Clients à crédit (cette boutique)') + barre('suppliers', 'Fournisseurs (cette boutique)') +
       (info.usage && info.usage.sellers_suspended > 0 ? '<p class="petit rouge-txt">' + info.usage.sellers_suspended + ' vendeur(s) suspendu(s) : ils retrouvent l’accès dès que votre niveau le permet.</p>' : '') +
@@ -328,7 +328,7 @@ const VueAbonnement = {
         if (s.status === 'paid') {
           Abonnement.oublierPaiement(); await Abonnement.charger();
           if (App.onglet === 'abonnement') this.dessiner();
-          carte('ab-ok', '<b>✅ Paiement confirmé. Merci !</b><p class="petit">Votre abonnement ' + esc((Abonnement.donnees() || {}).name || '') + ' est actif.</p>');
+          carte('ab-ok', '<b>Paiement confirmé. Merci !</b><p class="petit">Votre abonnement ' + esc((Abonnement.donnees() || {}).name || '') + ' est actif.</p>');
           toast('Abonnement activé', 'ok');
           return;
         }

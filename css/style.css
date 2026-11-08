@@ -1,6 +1,7 @@
 /* EvoBuskin - styles
    POUR CHANGER LES COULEURS : modifiez uniquement les variables ci-dessous (bloc :root). */
 :root {
+  color-scheme: light;
   --couleur-principale: #0b7a3e;   /* vert : barre du haut, boutons */
   --couleur-principale-fonce: #075c2e;
   --couleur-accent: #f2b705;       /* jaune : mises en avant */
@@ -336,7 +337,7 @@ div.cal-titre { cursor: default; }
 .ab-rempli { height: 100%; background: #0b7a3c; border-radius: 6px; }
 .ab-rempli.plein { background: #d64545; }
 .ab-grille { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 12px 0; }
-.ab-plan { position: relative; background: var(--carte, #fff); border: 2px solid #dfe7e2; border-radius: 16px; padding: 16px 14px; }
+.ab-plan { position: relative; background: var(--couleur-carte); border: 2px solid #dfe7e2; border-radius: 16px; padding: 16px 14px; }
 .ab-plan.vedette { border-color: #0b7a3c; box-shadow: 0 4px 14px rgba(11, 122, 60, .18); }
 .ab-plan.courant { background: #f1faf4; }
 .ab-plan h3 { margin: 0 0 4px; font-size: 1.15rem; }
@@ -359,7 +360,7 @@ div.cal-titre { cursor: default; }
 /* ---------- Aide ---------- */
 .aide-tete { display: flex; align-items: center; gap: 12px; }
 .aide-tete h2 { margin: 0; }
-.aide-recherche { position: sticky; top: 0; z-index: 5; padding: 8px 0; background: var(--fond, #f4f7f5); }
+.aide-recherche { position: sticky; top: 0; z-index: 5; padding: 8px 0; background: var(--couleur-fond); }
 .aide-recherche input { width: 100%; padding: 14px 16px; font-size: 1rem; border: 2px solid #cfdad3; border-radius: 14px; box-sizing: border-box; }
 .aide-recherche input:focus { outline: none; border-color: #0b7a3c; }
 .aide-rapides { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -372,7 +373,7 @@ div.cal-titre { cursor: default; }
 .aide-chip { padding: 8px 12px; background: #fff; border: 1px solid #cfdad3; border-radius: 20px; font-size: .85rem; text-decoration: none; color: inherit; }
 .aide-section { margin: 22px 0; scroll-margin-top: 70px; }
 .aide-section h3 { margin: 0 0 2px; font-size: 1.2rem; }
-.aide-sujet { background: var(--carte, #fff); border: 1px solid #dfe7e2; border-radius: 14px; margin: 8px 0; overflow: hidden; }
+.aide-sujet { background: var(--couleur-carte); border: 1px solid #dfe7e2; border-radius: 14px; margin: 8px 0; overflow: hidden; }
 .aide-sujet summary { padding: 14px 16px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
 .aide-sujet summary::-webkit-details-marker { display: none; }
 .aide-sujet summary::after { content: '▾'; margin-left: auto; opacity: .5; transition: transform .2s; }
@@ -385,8 +386,8 @@ div.cal-titre { cursor: default; }
 .aide-etapes li { counter-increment: e; position: relative; padding: 4px 0 12px 42px; }
 .aide-etapes li::before { content: counter(e); position: absolute; left: 0; top: 2px; width: 28px; height: 28px; border-radius: 50%; background: #0b7a3c; color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
 .aide-etapes li:not(:last-child)::after { content: ''; position: absolute; left: 13px; top: 34px; bottom: 2px; width: 2px; background: #dbe9e0; }
-.clic { display: inline-block; padding: 1px 9px; background: #0b7a3c; color: #fff; border-radius: 8px; font-weight: 600; font-size: .88em; white-space: nowrap; }
-.champ { display: inline-block; padding: 1px 8px; background: #eef1ef; border: 1px solid #cfdad3; border-radius: 6px; font-weight: 600; font-size: .88em; }
+.aide-clic { display: inline-block; padding: 1px 9px; background: #0b7a3c; color: #fff; border-radius: 8px; font-weight: 600; font-size: .88em; white-space: nowrap; }
+.aide-champ { display: inline-block; padding: 1px 8px; background: #eef1ef; border: 1px solid #cfdad3; border-radius: 6px; font-weight: 600; font-size: .88em; }
 .aide-note { margin: 10px 0; padding: 10px 12px; border-radius: 10px; font-size: .9rem; }
 .aide-note.ok { background: #eaf7ee; border-left: 4px solid #0b7a3c; }
 .aide-note.astuce { background: #eef5ff; border-left: 4px solid #3a7bd5; }
@@ -402,11 +403,20 @@ div.cal-titre { cursor: default; }
 .aide-res-sec { font-size: .8rem; font-weight: 700; opacity: .6; margin-top: 12px; }
 .aide-flash { animation: evo-flash 1.8s ease; }
 @keyframes evo-flash { 0%, 60% { box-shadow: 0 0 0 3px #0b7a3c; } 100% { box-shadow: 0 0 0 0 transparent; } }
-@media (prefers-color-scheme: dark) {
-  .aide-recherche input { background: #1c2420; color: #eee; border-color: #3a4740; }
-  .aide-sujet[open] summary { background: #1f2a24; border-color: #2f3b34; }
-  .aide-note.ok { background: #16281d; } .aide-note.astuce { background: #17202e; } .aide-note.attention { background: #2d2412; }
-  .aide-rapide, .aide-chip { background: #1c2420; border-color: #34423a; }
-  .champ { background: #26302a; border-color: #3a4740; }
-  .aide-tab tbody th { background: #1f2a24; } .aide-tab th, .aide-tab td { border-color: #34423a; }
-}
+
+.ico-svg { vertical-align: middle; flex: none; }
+.aide-ico { display: inline-flex; vertical-align: middle; color: #0b7a3c; margin-right: 4px; }
+.aide-rapide span { display: inline-flex; color: #0b7a3c; }
+.aide-chip { display: inline-flex; align-items: center; gap: 6px; }
+.aide-chip svg { color: #0b7a3c; }
+.aide-note { display: flex; gap: 10px; align-items: flex-start; }
+.aide-note-ico { display: inline-flex; margin-top: 1px; }
+.aide-note.ok .aide-note-ico { color: #0b7a3c; } .aide-note.astuce .aide-note-ico { color: #3a7bd5; } .aide-note.attention .aide-note-ico { color: #e08a00; }
+.aide-images { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0; }
+.aide-images figure { margin: 0; flex: 1 1 220px; max-width: 320px; }
+.aide-images img { width: 100%; height: auto; border: 1px solid #dfe7e2; border-radius: 12px; display: block; }
+.aide-images figcaption { font-size: .82rem; color: var(--couleur-texte-doux); margin-top: 6px; }
+.aide-case { display: flex; gap: 8px; align-items: flex-start; font-size: .88rem; margin: 6px 0 12px; }
+.aide-wa { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.aide-support textarea { width: 100%; box-sizing: border-box; }
+.aide-tete .btn { width: auto; padding: 8px 14px; min-height: 0; }

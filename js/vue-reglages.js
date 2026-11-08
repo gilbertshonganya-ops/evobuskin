@@ -17,13 +17,12 @@ const VueReglages = {
       '<div class="carte"><h3>Sauvegarde</h3><div style="height:8px"></div>' +
         '<p class="petit">' + (r.derniereSauvegarde ? 'Dernière sauvegarde : ' + formatDateHeure(r.derniereSauvegarde) : 'Aucune sauvegarde faite.') + '</p>' +
         '<div class="pile">' +
-          '<button class="btn" id="rExportChiffre">Sauvegarde protégée par mot de passe</button>' +
-          '<button class="btn contour" id="rExport">Sauvegarde simple (non protégée)</button>' +
+          '<button class="btn" id="rExport">Sauvegarder</button>' +
           '<button class="btn contour" id="rImport">Restaurer une sauvegarde</button>' +
           '<input type="file" id="fichierImport" accept="application/json,.json" hidden>' +
           '<button class="btn gris" id="rCsvVentes">Exporter les ventes (Excel/CSV)</button>' +
           '<button class="btn gris" id="rCsvStock">Exporter le stock (Excel/CSV)</button>' +
-        '</div><p class="petit" style="margin-top:10px">La sauvegarde protégée est chiffrée (AES-256). Sans le mot de passe, personne ne peut la rouvrir, pas même nous.</p></div>' +
+        '</div></div>' +
       '<div id="zoneCompte"></div>' +
       '<div class="carte"><h3>Aide</h3><p class="petit">Besoin de comprendre une fonction ? L’Aide explique tout, pas à pas.</p><button class="btn" id="rAide">Ouvrir l’aide</button><p class="petit" style="margin-top:12px">Un problème qui revient ? Copiez le rapport et envoyez-le au support : il aide à trouver la cause rapidement. Il ne contient ni mot de passe ni adresse email.</p><button class="btn gris" id="rRapport">Copier le rapport pour le support</button></div>' +
       '<p class="petit texte-centre" style="margin:14px 0">EvoBuskin &middot; vos données sur tous vos appareils<br><a href="conditions.html" target="_blank" rel="noopener">Conditions d’utilisation</a> &middot; <a href="confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a></p>';
@@ -73,7 +72,6 @@ const VueReglages = {
       Audit.log('sauvegarde', { chiffree: false });
       toast('Sauvegarde créée. Gardez le fichier en lieu sûr.', 'ok'); App.rafraichir();
     });
-    $('#rExportChiffre').addEventListener('click', () => this.sauvegardeChiffree());
     $('#rImport').addEventListener('click', () => $('#fichierImport').click());
     $('#fichierImport').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; this.restaurer(f); }); // value vidée : on peut rechoisir le même fichier
     $('#rCsvVentes').addEventListener('click', () => this.exporterCsvVentes());

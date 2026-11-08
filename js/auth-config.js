@@ -9,6 +9,6 @@ window.AUTH_CONFIG = Object.freeze({
   // false = pas d'écran Google Authenticator pour le patron (doit correspondre à v9_mfa_verified côté SQL).
   // Coordonnées affichées dans les conditions d'utilisation et la politique de confidentialité (laisser vide pour ne rien afficher)
   supportEmail: 'evobuskin@gmail.com',
-  supportWhatsapp: '243816945259',
+  supportWhatsapp: '+243816945259',
   requireMfa: false
 });
