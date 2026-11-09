@@ -187,7 +187,7 @@ const App = {
     this.sansJeton = false;
     this.suppressionPrevue = null;
     TempsReel.arreter();
-    Abonnement.arreter();
+    Abonnement.arreter(); if (window.Annonces) Annonces.arreter();
     SyncManager.stop();
     CloudSnapshotSync.arreter();
     SyncManager.configure(null);
@@ -282,7 +282,7 @@ const App = {
       }
     }
     TempsReel.demarrer(this.businessId);
-    Abonnement.demarrer();
+    Abonnement.demarrer(); if (window.Annonces) Annonces.demarrer(this.businessId);
     this.ouvrirSession(profile.role);
     if (profile.role === 'patron' && Abonnement.paiementEnAttente()) this.aller('abonnement');
     this.verifierSuppression();
@@ -297,7 +297,7 @@ const App = {
     const enAttente = (await DB.syncQueueListe({ businessId: this.businessId })).filter((x) => x.status !== 'synced');
     if (enAttente.length) throw new Error('PENDING_OPERATIONS');
     await CloudDB.rpc('v19_set_active_business', { p_business_id: id });
-    SyncManager.stop(); CloudSnapshotSync.arreter(); TempsReel.arreter(); Abonnement.arreter(); SyncManager.configure(null);
+    SyncManager.stop(); CloudSnapshotSync.arreter(); TempsReel.arreter(); Abonnement.arreter(); if (window.Annonces) Annonces.arreter(); SyncManager.configure(null);
     await DB.toutEffacer(['audit', 'sync_queue']);
     Object.assign(this.reglages, { taux: 2800, nomBoutique: 'Ma Boutique', telBoutique: '', affichage: 'USD', derniereSauvegarde: 0 });
     this.suppressionPrevue = null;
@@ -334,7 +334,7 @@ const App = {
     SyncManager.configure(this.businessId);
     this.reglages.nomBoutique = profile.business_name || this.reglages.nomBoutique;
     $('#nomBoutique').textContent = this.reglages.nomBoutique || 'EvoBuskin';
-    Abonnement.demarrer();
+    Abonnement.demarrer(); if (window.Annonces) Annonces.demarrer(this.businessId);
     this.ouvrirSession(profile.role);
     toast('Mode hors ligne : vos ventes seront envoyées dès le retour d’Internet.');
   },

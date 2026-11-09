@@ -420,3 +420,15 @@ div.cal-titre { cursor: default; }
 .aide-wa { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .aide-support textarea { width: 100%; box-sizing: border-box; }
 .aide-tete .btn { width: auto; padding: 8px 14px; min-height: 0; }
+
+/* Annonces de l'équipe : bandeau fin, discret, fermable */
+#annonces { display: flex; flex-direction: column; gap: 6px; padding: 0 12px; }
+#annonces:empty { display: none; }
+.annonce { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; margin-top: 8px; border-radius: 10px; border: 1px solid #c9d8f3; background: #eaf2ff; color: #17325c; font-size: .88rem; line-height: 1.35; }
+.annonce-success { background: #e6f5ec; border-color: #b8dfc7; color: #12482b; }
+.annonce-warning { background: #fff4de; border-color: #f0d7a0; color: #5e3b00; }
+.annonce-important { background: #fdeaea; border-color: #f0b9b9; color: #6b1414; }
+.annonce-ico { flex: none; margin-top: 1px; }
+.annonce-txt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.annonce-txt a { color: inherit; font-weight: 700; text-decoration: underline; }
+.annonce-x { flex: none; background: none; border: 0; color: inherit; font-size: 1.4rem; line-height: 1; padding: 0 6px; min-width: 32px; min-height: 32px; cursor: pointer; opacity: .7; }
