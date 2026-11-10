@@ -243,7 +243,10 @@ const App = {
     this.businessId = profile.business_id;
     if (!this.businessId) throw new Error('Boutique sécurisée introuvable.');
     if (profile.role === 'patron') {
-      const mfa = (window.AUTH_CONFIG && window.AUTH_CONFIG.requireMfa === true) ? await Auth.requirePatronMfa() : { enrolled: true, aal2: true };
+      // règle de double authentification : réglage local OU règle de la plateforme (interface d'administration)
+      let exigee = !!(window.AUTH_CONFIG && window.AUTH_CONFIG.requireMfa === true);
+      if (!exigee && navigator.onLine) { try { const pol = await CloudDB.rpc('app_security_policy', {}); exigee = !!(pol && pol.require_mfa_owner); } catch (_) { /* fonction absente ou réseau : pas d'exigence supplémentaire */ } }
+      const mfa = exigee ? await Auth.requirePatronMfa() : { enrolled: true, aal2: true };
       if (!mfa.enrolled || !mfa.aal2) {
         AuthUI.afficherMfaSetup(mfa, () => this.apresAuthentification(Auth.getSession()));
         return;

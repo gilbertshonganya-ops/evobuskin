@@ -18,6 +18,11 @@ const Annonces = (() => {
         (a.dismissible ? '<button class="annonce-x" aria-label="Fermer ce message" data-x="' + esc(a.id) + '">&times;</button>' : '') + '</div>';
     }).join('');
     z.querySelectorAll('[data-x]').forEach((b) => b.addEventListener('click', () => fermer(b.dataset.x)));
+    // clic sur le lien : compté côté serveur (silencieux, ne bloque jamais l'ouverture du lien)
+    z.querySelectorAll('.annonce a[href]').forEach((l) => l.addEventListener('click', () => {
+      const id = l.closest('.annonce') && l.closest('.annonce').dataset.id;
+      if (id && navigator.onLine) { try { CloudDB.rpc('app_click_announcement', { p_id: id }).catch(() => {}); } catch (_) { /* ignoré */ } }
+    }));
     // « vue » : une seule fois par annonce et par session de l'application
     liste.slice(0, 3).forEach((a) => {
       if (vues[a.id] || !navigator.onLine) return; vues[a.id] = 1;
