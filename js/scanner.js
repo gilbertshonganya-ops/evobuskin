@@ -11,6 +11,7 @@ const Scanner = (() => {
 
   // Ouvre le scanner. Retourne une promesse : le code lu (texte) ou null si annulé.
   function scanner() {
+    if (window.EvoNative && typeof window.EvoNative.scan === 'function') return window.EvoNative.scan();
     return new Promise((resolve) => {
       let flux = null, actif = true, resultat = null, minuteur = null;
 

@@ -192,6 +192,11 @@ function prixAFixer(p) { return !(Number(p.prixVente) > 0); }
 
 // Enregistre un fichier sur le téléphone (téléchargement ou partage)
 async function enregistrerFichier(nom, contenu, type) {
+  // Application Android (coque React Native) : le téléphone enregistre / partage le fichier lui-même
+  if (window.EvoNative && typeof window.EvoNative.saveFile === 'function') {
+    const ok = await window.EvoNative.saveFile(nom, new Uint8Array(await new Blob([contenu]).arrayBuffer()), type);
+    if (ok) return;
+  }
   const blob = new Blob([contenu], { type });
   try {
     const fichier = new File([blob], nom, { type });

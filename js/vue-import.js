@@ -27,7 +27,10 @@ async function lireXlsx(tampon) {
     if (e.methode === 0) return dec.decode(brut);
     if (e.methode !== 8) throw new Error('Compression .xlsx non prise en charge. Enregistrez le fichier en CSV.');
     const flux = new Blob([brut]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-    return dec.decode(await new Response(flux).arrayBuffer());
+    // Protection contre les fichiers « bombes » (petit fichier qui se décompresse en une taille énorme) : 40 Mo maximum
+    const lecteur = flux.getReader(); const morceaux = []; let total = 0;
+    for (;;) { const { done, value } = await lecteur.read(); if (done) break; total += value.length; if (total > 40 * 1024 * 1024) { try { await lecteur.cancel(); } catch (_) {} throw new Error('Fichier Excel trop volumineux une fois ouvert. Enregistrez-le en CSV.'); } morceaux.push(value); }
+    return dec.decode(await new Blob(morceaux).arrayBuffer());
   };
   const xml = (t) => new DOMParser().parseFromString(t, 'text/xml');
   // 3) textes partagés
@@ -151,9 +154,11 @@ const VueImport = {
     if (!fichier) return;
     const zone = $('#iApercu');
     if (/\.xls$/i.test(fichier.name)) { zone.innerHTML = '<div class="bandeau rouge">Ce fichier est un ancien format Excel (.xls). Dans Excel, faites « Enregistrer sous » puis choisissez <b>Classeur Excel (.xlsx)</b> ou <b>CSV</b>.</div>'; return; }
+    if (fichier.size > 5 * 1024 * 1024) { zone.innerHTML = '<div class="bandeau rouge">Fichier trop volumineux (5 Mo maximum). Divisez-le en plusieurs fichiers.</div>'; return; }
     try {
       const lignes = /\.xlsx$/i.test(fichier.name) ? await lireXlsx(await fichier.arrayBuffer()) : parserCsv(await this.lireTexte(fichier));
       if (lignes.length < 2) throw new Error('Le fichier est vide ou n\'a qu\'une ligne de titres');
+      if (lignes.length > 5001) throw new Error('Trop de lignes (5 000 produits maximum par fichier). Divisez le fichier.');
       const existants = await DB.tout('produits');
       this.analyse = this.analyser(lignes, existants, $('#iDevise').value);
       this.afficherApercu();

@@ -70,6 +70,9 @@ const AuthHorsLigne = (() => {
     if (!compte) return { inconnu: true };
     const p = profil(compte.userId);
     if (!p) return { inconnu: true };
+    // Sécurité : sans validation par le serveur depuis plus de 30 jours, la connexion hors ligne n'est plus acceptée
+    // (un compte supprimé, suspendu ou retiré d'une boutique ne garde pas un accès illimité sur un ancien téléphone).
+    if (!(Date.now() - Number(p.vuLe || 0) < 30 * 24 * 3600 * 1000)) return { inconnu: true };
     const hash = await empreinte(motDePasse, compte.sel, email);
     if (hash !== compte.hash) { compterEchec(); noterEchecEnAttente(email); return null; }
     effacerEssais();

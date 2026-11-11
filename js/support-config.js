@@ -2,7 +2,9 @@
    whatsapp : numéro avec indicatif pays, chiffres seulement, sans + ni espaces (exemple RDC : 243XXXXXXXXX)
    email    : adresse qui reçoit les demandes d'aide */
 const SUPPORT_CONFIG = {
-  whatsapp: '',
-  email: ''
+  whatsapp: '243816945259',
+  email: 'evobuskin@gmail.com',
+  // Adresse officielle du site (à changer ici quand vous aurez votre propre nom de domaine)
+  siteUrl: 'https://evobuskinsite.vercel.app'
 };
 window.SUPPORT_CONFIG = SUPPORT_CONFIG;
