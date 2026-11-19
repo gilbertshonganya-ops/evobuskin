@@ -9,18 +9,27 @@ const Subscriptions = (() => {
     if(!businessId||!planId||!provider||!idempotencyKey) throw new Error('Paramètres de paiement incomplets.');
     return CloudDB.rpc('v13_create_checkout_request',{p_business_id:businessId,p_plan_id:planId,p_provider:provider,p_idempotency_key:idempotencyKey});
   }
+  // Appel d'une fonction du serveur avec la session de l'utilisateur. Si le serveur refuse le jeton (jeton périmé, heure du téléphone décalée…),
+  // on renouvelle la session UNE fois et on réessaie : l'utilisateur n'est reconnecté de force que si le renouvellement est vraiment refusé.
+  async function appelerFonction(nom,corps){
+    let session = await window.Auth?.ensureFreshSession?.();
+    if(!session?.access_token) throw new Error('Session expirée.');
+    const lancer = (jeton)=>fetch(`${window.AUTH_CONFIG.supabaseUrl}/functions/v1/${nom}`,{
+      method:'POST',
+      headers:{'content-type':'application/json','authorization':`Bearer ${jeton}`,'apikey':window.AUTH_CONFIG.supabaseAnonKey},
+      body:JSON.stringify(corps)
+    });
+    let res = await lancer(session.access_token);
+    if(res.status===401 && window.Auth?.refreshSession){
+      try{ const s2 = await window.Auth.refreshSession(); if(s2?.access_token) res = await lancer(s2.access_token); }catch(_){}
+    }
+    return res;
+  }
   async function startCheckout({businessId,planId,idempotencyKey}){
     if(!businessId||!planId) throw new Error('Business et plan requis.');
     const key = idempotencyKey || crypto.randomUUID();
     if(!window.AUTH_CONFIG?.supabaseUrl || !window.AUTH_CONFIG?.supabaseAnonKey) throw new Error('Le service n’est pas encore configuré. Contactez le support.');
-    const session = await window.Auth?.ensureFreshSession?.();
-    const accessToken = session?.access_token;
-    if(!accessToken) throw new Error('Session expirée.');
-    const res = await fetch(`${window.AUTH_CONFIG.supabaseUrl}/functions/v1/pawapay-checkout`,{
-      method:'POST',
-      headers:{'content-type':'application/json','authorization':`Bearer ${accessToken}`,'apikey':window.AUTH_CONFIG.supabaseAnonKey},
-      body:JSON.stringify({business_id:businessId,plan_id:planId,idempotency_key:key})
-    });
+    const res = await appelerFonction('pawapay-checkout',{business_id:businessId,plan_id:planId,idempotency_key:key});
     const data = await res.json().catch(()=>({}));
     if(!res.ok || !data.payment_url){
       const err = new Error(data.error || 'Impossible de démarrer le paiement.');
@@ -44,13 +53,7 @@ const Subscriptions = (() => {
   async function verifyPayment(paymentId){
     try{
       if(!paymentId||!window.AUTH_CONFIG?.supabaseUrl) return null;
-      const session = await window.Auth?.ensureFreshSession?.();
-      if(!session?.access_token) return null;
-      const res = await fetch(`${window.AUTH_CONFIG.supabaseUrl}/functions/v1/pawapay-webhook`,{
-        method:'POST',
-        headers:{'content-type':'application/json','authorization':`Bearer ${session.access_token}`,'apikey':window.AUTH_CONFIG.supabaseAnonKey},
-        body:JSON.stringify({payment_id:paymentId})
-      });
+      const res = await appelerFonction('pawapay-webhook',{payment_id:paymentId});
       return await res.json().catch(()=>null);
     }catch(_){ return null; }
   }

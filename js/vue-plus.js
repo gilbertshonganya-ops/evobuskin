@@ -10,12 +10,13 @@ const VuePlus = {
       ['boutiques', '\u{1F3EA}', 'Mes boutiques', 'Ajouter, ouvrir et gérer plusieurs boutiques'],
       ['equipe', '\u{1F465}', 'Équipe', 'Inviter des vendeurs, gérer les accès'],
       ['reglages', '\u2699\uFE0F', 'Réglages', 'Boutique, taux, mot de passe, sauvegarde'],
-      ['aide', '\u{1F4D6}', 'Aide', 'Tout comprendre, pas à pas : vendre, stock, abonnement…']
+      ['aide', '\u{1F4D6}', 'Aide', 'Tout comprendre, pas à pas : vendre, stock, abonnement…'],
+      ['visites', '\u{1F3AC}', 'Revoir les visites guidées', 'Chaque écran réexplique ses boutons, pas à pas']
     ];
     conteneur.innerHTML =
       (await App.bandeaux()) +
       '<h2>Plus</h2><div class="liste">' + entrees.map((e) =>
         '<div class="ligne" data-aller="' + e[0] + '"><div style="display:flex;gap:12px;align-items:center"><span style="font-size:1.5rem">' + e[1] + '</span><div><div class="nom">' + e[2] + '</div><div class="sous">' + e[3] + '</div></div></div><span>&rsaquo;</span></div>').join('') + '</div>';
-    $$('[data-aller]', conteneur).forEach((l) => l.addEventListener('click', () => App.aller(l.dataset.aller)));
+    $$('[data-aller]', conteneur).forEach((l) => l.addEventListener('click', () => { if (l.dataset.aller === 'visites') { Visites.reinitialiser(); toast('Les visites guidées se relanceront à l’ouverture de chaque écran.', 'ok'); App.aller('caisse'); } else App.aller(l.dataset.aller); }));
   }
 };

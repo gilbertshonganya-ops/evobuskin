@@ -5,6 +5,6 @@ const SUPPORT_CONFIG = {
   whatsapp: '243816945259',
   email: 'evobuskin@gmail.com',
   // Adresse officielle du site (à changer ici quand vous aurez votre propre nom de domaine)
-  siteUrl: 'https://evobuskinsite.vercel.app'
+  siteUrl: 'https://evobuskin-site.vercel.app'
 };
 window.SUPPORT_CONFIG = SUPPORT_CONFIG;

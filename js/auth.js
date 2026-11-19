@@ -45,6 +45,8 @@ const Auth = (() => {
   async function signIn(email,password){const d=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email.trim().toLowerCase(),password})});if(d.user&&d.user.email_confirmed_at===null)throw new Error('EMAIL_NOT_CONFIRMED');saveSession(d);return d}
   // Appel d'une fonction publique du serveur (sans être connecté)
   async function rpcPublic(fn,args){return request('/rest/v1/rpc/'+fn,{method:'POST',body:JSON.stringify(args||{})})}
+  // Appel d'une fonction du serveur avec la session de l'utilisateur connecté
+  async function rpcAvecJeton(fn,args,token){return request('/rest/v1/rpc/'+fn,{method:'POST',accessToken:token,body:JSON.stringify(args||{})})}
   // Changement de mot de passe : on vérifie l'ancien, puis on enregistre le nouveau
   // Changement de mot de passe. Si le compte est protégé par un code (MFA), Supabase exige une session « AAL2 » :
   // on demande alors le code à 6 chiffres, on le vérifie, puis on réessaie avec la session renforcée.
@@ -75,6 +77,6 @@ const Auth = (() => {
   async function requirePatronMfa(){const s=await ensureFreshSession();if(!s?.access_token)throw new Error('AUTH_REQUIRED');const f=await listFactors();const verified=(f?.all||[]).find(x=>x.factor_type==='totp'&&x.status==='verified');if(!verified)return{enrolled:false,aal2:false,factors:f};if(aalOf(s.access_token)==='aal2')return{enrolled:true,aal2:true,factor:verified,factors:f};const challenge=await challengeFactor(verified.id);return{enrolled:true,aal2:false,factor:verified,challenge,factors:f}}
   async function signOut(){const s=getSession();if(s?.access_token&&configure()){try{await request('/auth/v1/logout',{method:'POST',accessToken:s.access_token})}catch(_){}}clearSession()}
   window.addEventListener('online',()=>{if(getSession()?.refresh_token)ensureFreshSession().catch(()=>{})});
-  return{configure,signUp,signIn,rpcPublic,changerMotDePasse,resetPassword,updatePassword,getProfile,signOut,getSession,clearSession,refreshSession,ensureFreshSession,listFactors,enrollTotp,challengeFactor,verifyFactor,requirePatronMfa}
+  return{configure,signUp,signIn,rpcPublic,rpcAvecJeton,changerMotDePasse,resetPassword,updatePassword,getProfile,signOut,getSession,clearSession,refreshSession,ensureFreshSession,listFactors,enrollTotp,challengeFactor,verifyFactor,requirePatronMfa}
 })();
 window.Auth=Auth;

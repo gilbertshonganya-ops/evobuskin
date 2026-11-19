@@ -132,9 +132,8 @@ const App = {
     window.addEventListener('offline', majReseau);
     majReseau();
 
-    $('#btnQuitter').addEventListener('click', async () => {
-      if (await confirmer('Se déconnecter', 'Vous devrez retaper votre mot de passe pour revenir dans l’application.', 'Se déconnecter')) this.deconnecter();
-    });
+    // Le bouton rond de l'en-tête ouvre « Mon profil » (photo, nom, Se déconnecter)
+    $('#btnQuitter').addEventListener('click', () => Profil.ouvrir());
     // Bouton « Retour » des écrans du menu Plus (un seul écouteur pour tous les écrans)
     $('#vue').addEventListener('click', (e) => { if (e.target.closest('[data-retour]')) this.aller('plus'); });
     $('#vue').addEventListener('click', async (e) => {
@@ -173,7 +172,8 @@ const App = {
     });
     $('#nomBoutique').addEventListener('click', () => { if (this.estPatron() && this.role) this.aller('boutiques'); });
     // Bouton « ? » de la barre du haut : ouvre l'Aide depuis n'importe quel écran
-    $('#btnAide').addEventListener('click', () => { if (this.role) this.ouvrirAide(); });
+    // « ? » : visite guidée de l'écran ouvert (ou l'Aide complète s'il n'a pas de visite)
+    $('#btnAide').addEventListener('click', () => { if (!this.role) return; if (window.Visites && this.onglet !== 'aide' && Visites.existe(this.onglet)) Visites.lancer(this.onglet, { force: true }); else this.ouvrirAide(); });
     $('#vue').addEventListener('click', (e) => { if (e.target.closest('[data-recharger-ecran]')) this.rafraichir(); });
 
     // Bouton "Installer l'application" proposé par Chrome
@@ -198,6 +198,7 @@ const App = {
 
   // Déconnexion volontaire : on note l'événement dans le journal AVANT de fermer la session
   async deconnecter() {
+    if (window.Profil) Profil.reinitialiser();
     try {
       if (this.businessId && navigator.onLine && Auth.getSession()) {
         await Promise.race([
@@ -212,7 +213,10 @@ const App = {
 
   afficherConnexion() {
     this.role = null;
-    if (window.AuthUI) AuthUI.afficherConnexion();
+    const montrer = () => { if (window.AuthUI) AuthUI.afficherConnexion(); };
+    let auto = true;
+    try { auto = !navigator.webdriver && !localStorage.getItem('evo_visites_off'); } catch (_) {}
+    if (auto && window.Onboarding && !Onboarding.dejaVu()) Onboarding.afficher(montrer); else montrer();
   },
 
   async apresAuthentification(data) {
@@ -221,6 +225,7 @@ const App = {
     if (!user) throw new Error('Session d’authentification introuvable.');
 
     this.nomComplet = String(user.user_metadata?.full_name || '').trim();
+    this.utilisateurLocal = user;
     // Le rôle doit venir de la base sécurisée, jamais d'un champ contrôlé par le client.
     // Le profil sera créé/attribué par le backend Supabase dans l'étape suivante.
     let profile = null;
@@ -372,6 +377,7 @@ const App = {
       '<button data-onglet="' + o.id + '"><span class="ico">' + o.icone + '</span>' + o.titre + '</button>').join('');
     $$('#menu button').forEach((b) => b.addEventListener('click', () => this.aller(b.dataset.onglet)));
     this.aller('caisse');
+    if (window.Profil) Profil.charger();
   },
 
   async aller(id) {
@@ -394,6 +400,7 @@ const App = {
     try {
       await onglet.vue().afficher(vue);
       vue.dataset.pret = '1';
+      if (window.Visites) Visites.auto(id);
     } catch (e) {
       console.error(e);
       vue.innerHTML = '<div class="carte danger"><b>Une erreur est survenue</b><p class="petit">' + esc(Reseau.traduire(e)) + '</p>' +
