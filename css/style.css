@@ -473,19 +473,36 @@ body.visite-active #vue { padding-bottom: 75vh; }
 body.visite-active .fenetre-corps { padding-bottom: 70vh; }
 
 /* ---------- Présentation (3 pages) et page d'accueil ---------- */
-.onboarding { position: fixed; inset: 0; z-index: 90; background: #060d1f; color: #fff; display: flex; flex-direction: column; }
+.onboarding { position: fixed; inset: 0; z-index: 90; background: radial-gradient(120% 70% at 50% 0%, #0f6b3a 0%, #0a3d28 38%, #060d1f 75%); color: #fff; display: flex; flex-direction: column; }
 .ob-haut { display: flex; justify-content: flex-end; padding: 14px 16px 0; }
-.ob-haut button { background: transparent; border: 0; color: #cfe3d8; font-size: 1rem; padding: 10px; cursor: pointer; }
-.ob-piste { flex: 1; display: flex; overflow: hidden; }
+.ob-haut button { background: rgba(255,255,255,.1); border: 0; color: #e6f2ea; font-size: .95rem; padding: 9px 16px; border-radius: 20px; cursor: pointer; }
+.ob-piste { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 .ob-glisse { display: flex; width: 100%; transition: transform .3s ease; }
-.ob-page { flex: 0 0 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 28px; gap: 14px; }
-.ob-image { width: 168px; height: 168px; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #1fa05a, #0b5a30); display: flex; align-items: center; justify-content: center; font-size: 5.4rem; box-shadow: 0 14px 40px rgba(11,122,62,.45); }
-.ob-page h2 { margin: 8px 0 0; font-size: 1.55rem; }
-.ob-page p { margin: 0; max-width: 340px; line-height: 1.5; color: #cfd9e6; font-size: 1.05rem; }
-.ob-bas { padding: 10px 20px calc(24px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.ob-page { flex: 0 0 100%; overflow-y: auto; display: flex; padding: 0 20px; }
+.ob-contenu { margin: auto; width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 8px 0; }
+.ob-halo { width: 104px; height: 104px; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #2fbf74, #0b5a30); display: flex; align-items: center; justify-content: center; font-size: 3.4rem; box-shadow: 0 0 0 10px rgba(47,191,116,.15), 0 0 0 22px rgba(47,191,116,.07), 0 14px 40px rgba(11,122,62,.5); margin-bottom: 8px; }
+.ob-aveugle { background: radial-gradient(circle at 30% 25%, #ffb347, #c4690a); box-shadow: 0 0 0 10px rgba(255,179,71,.15), 0 0 0 22px rgba(255,179,71,.07), 0 14px 40px rgba(196,105,10,.45); }
+.ob-page h2 { margin: 0; font-size: 1.5rem; line-height: 1.28; text-align: center; font-weight: 800; }
+.ob-page h2 .o { color: #ffa63d; }
+.ob-sous { margin: 0; color: #cfe3d8; text-align: center; font-size: 1.02rem; }
+.ob-grille, .ob-liste, .ob-etapes { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; display: grid; gap: 10px; }
+.ob-grille { grid-template-columns: 1fr 1fr; }
+.ob-cadre { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: 18px; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.22); box-shadow: 0 6px 18px rgba(0,0,0,.25); backdrop-filter: blur(4px); line-height: 1.3; font-size: .98rem; color: #e8f0f6; }
+.ob-grille .ob-cadre { flex-direction: column; text-align: center; padding: 16px 10px; gap: 8px; }
+.ob-grille .ob-cadre b, .ob-etapes .ob-cadre b { display: block; color: #fff; font-size: 1.05rem; margin-bottom: 2px; }
+.ob-ico { flex: none; width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+.ob-grille .ob-ico { width: 54px; height: 54px; font-size: 1.9rem; border-radius: 16px; }
+.ob-cadre.v { border-color: #3fd18a; } .ob-cadre.v .ob-ico { background: rgba(63,209,138,.25); }
+.ob-cadre.o { border-color: #ffa63d; } .ob-cadre.o .ob-ico { background: rgba(255,166,61,.25); }
+.ob-cadre.b { border-color: #5aa9ff; } .ob-cadre.b .ob-ico { background: rgba(90,169,255,.25); }
+.ob-liste .ob-cadre b { color: #fff; }
+.ob-num { flex: none; width: 42px; height: 42px; border-radius: 50%; background: #ffa63d; color: #2b1800; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; }
+.ob-num.v { background: #3fd18a; color: #04301a; }
+.ob-puce { margin-top: 4px; padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,.1); font-size: .95rem; color: #e6f2ea; }
 .ob-points { display: flex; gap: 8px; }
-.ob-points i { width: 9px; height: 9px; border-radius: 50%; background: #3c4a66; transition: all .2s; }
-.ob-points i.on { background: var(--couleur-accent); width: 26px; border-radius: 6px; }
+.ob-points i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.28); transition: all .2s; }
+.ob-points i.on { background: #ffa63d; width: 28px; border-radius: 6px; }
+.ob-bas { padding: 10px 20px calc(24px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .ob-bas .btn { width: 100%; max-width: 380px; margin: 0; }
 
 /* ---------- Photo de profil (en-tête) ---------- */
@@ -495,3 +512,17 @@ body.visite-active .fenetre-corps { padding-bottom: 70vh; }
 .profil-nom { text-align: center; font-weight: 800; font-size: 1.15rem; }
 .profil-info { text-align: center; color: var(--couleur-texte-doux); margin-bottom: 12px; font-size: .95rem; }
 .profil-actions { display: grid; gap: 8px; }
+@media (max-height: 720px) {
+  .ob-contenu { gap: 10px; }
+  .ob-halo { width: 66px; height: 66px; font-size: 2.2rem; margin-bottom: 2px; box-shadow: 0 0 0 6px rgba(47,191,116,.15), 0 0 0 13px rgba(47,191,116,.07); }
+  .ob-aveugle { box-shadow: 0 0 0 6px rgba(255,179,71,.15), 0 0 0 13px rgba(255,179,71,.07); }
+  .ob-page h2 { font-size: 1.22rem; }
+  .ob-sous { font-size: .92rem; }
+  .ob-grille, .ob-liste, .ob-etapes { gap: 7px; margin-top: 0; }
+  .ob-cadre { padding: 9px 12px; font-size: .9rem; }
+  .ob-grille .ob-cadre { padding: 9px 6px; gap: 4px; }
+  .ob-grille .ob-ico { width: 38px; height: 38px; font-size: 1.4rem; }
+  .ob-ico { width: 38px; height: 38px; font-size: 1.3rem; }
+  .ob-num { width: 34px; height: 34px; font-size: 1.05rem; }
+  .ob-grille .ob-cadre b, .ob-etapes .ob-cadre b { font-size: .95rem; }
+}
