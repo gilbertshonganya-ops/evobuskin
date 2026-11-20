@@ -7,6 +7,70 @@ const Auth = (() => {
   function base(){return CONFIG().supabaseUrl.replace(/\/$/,'')}
   function headers(token){const c=CONFIG();const h={apikey:c.supabaseAnonKey,'Content-Type':'application/json'};if(token)h.Authorization='Bearer '+token;return h}
   async function request(path,options={}){if(!configure())throw new Error('Le service n\'est pas encore configuré. Contactez le support.');if(typeof navigator!=='undefined'&&navigator.onLine===false)throw Reseau.erreur();let r;try{r=await fetch(base()+path,{...options,headers:{...headers(options.accessToken),...(options.headers||{})},cache:'no-store'})}catch(_){throw Reseau.erreur()}let d=null;try{d=await r.json()}catch(_){}if(!r.ok){const e=new Error(d?.msg||d?.message||d?.error_description||d?.error||('Erreur '+r.status+' '+path.split('?')[0]));e.code=d?.code||d?.error||r.status;e.status=r.status;try{Diag.noter('auth '+path.split('?')[0].replace('/auth/v1/',''),e)}catch(_){}throw e}return d}
+
+  // ===== Connexion par numéro de téléphone (fonction serveur « evo-auth ») =====
+  const DOMAINE_TEL = 'tel.evobuskin.app';
+  const estTel = (id) => String(id || '').toLowerCase().endsWith('@' + DOMAINE_TEL);
+  const emailTech = (numero) => numero + '@' + DOMAINE_TEL;
+  const numeroDe = (id) => String(id || '').split('@')[0];
+  // Numéro : « 0812345678 », « 812345678 » ou « +243 812 345 678 » (RDC par défaut) ; autre pays : écrire l'indicatif (+225…)
+  function normaliserNumero(brut) {
+    let n = String(brut || '').trim().replace(/[\s.\-()]/g, '');
+    const inter = n.startsWith('+') || n.startsWith('00');
+    n = n.replace(/^\+/, '').replace(/^00/, '').replace(/\D/g, '');
+    if (!inter) { if (/^0\d{9}$/.test(n)) n = '243' + n.slice(1); else if (/^\d{9}$/.test(n)) n = '243' + n; }
+    if (!/^\d{8,15}$/.test(n) || (n.startsWith('243') && !/^243\d{9}$/.test(n))) { const e = new Error('Numéro invalide. Exemple : 0812345678'); e.evo = true; e.code = 'PHONE_INVALID'; throw e; }
+    return n;
+  }
+  function formaterNumero(n) { n = String(n || ''); return /^243\d{9}$/.test(n) ? '+243 ' + n.slice(3, 6) + ' ' + n.slice(6, 9) + ' ' + n.slice(9) : '+' + n; }
+  // Identifiant utilisé pour la connexion : l'adresse « numéro » pour un compte téléphone, sinon l'e-mail
+  function identifiant(user) { const t = user && user.user_metadata && user.user_metadata.telephone; return t ? emailTech(String(t)) : String((user && user.email) || ''); }
+  function affichage(id) { return estTel(id) ? formaterNumero(numeroDe(id)) : String(id || ''); }
+  const MESSAGES_EVO = {
+    INVALID: 'Invalid login credentials', AAL2_REQUIRED: 'AAL2_REQUIRED',
+    PHONE_INVALID: 'Numéro invalide. Exemple : 0812345678', PHONE_EXISTS: 'Un compte existe déjà avec ce numéro. Appuyez sur « Me connecter ».',
+    PIN_FORMAT: 'Le code secret doit avoir 5 caractères : 4 chiffres et 1 lettre majuscule (exemple : 4827K).',
+    PIN_WEAK: 'Ce code est trop facile à deviner (1234, 1111…). Choisissez-en un autre.',
+    NAME_REQUIRED: 'Indiquez votre nom.', SHOP_REQUIRED: 'Indiquez le nom de votre boutique.', INVITE_REQUIRED: 'Un code d’invitation est requis pour un vendeur.',
+    INVITE_INVALID: 'Code d’invitation invalide, expiré ou déjà utilisé, ou limite d’utilisateurs atteinte. Demandez un nouveau code au propriétaire.',
+    SIGNUP_FAILED: 'Impossible de créer le compte pour le moment. Réessayez plus tard.',
+    CODE_INVALID: 'Code incorrect ou expiré.', EMAIL_INVALID: 'Cette adresse e-mail n’est pas valide.', EMAIL_USED: 'Cette adresse e-mail est déjà utilisée par un autre compte.',
+    EMAIL_FAILED: 'Impossible d’envoyer le code à cette adresse. Vérifiez-la ou réessayez plus tard.',
+    AUTH_REQUIRED: 'Votre session a expiré. Reconnectez-vous.', NOT_TEL_ACCOUNT: 'Cette fonction concerne les comptes avec numéro de téléphone.',
+    SERVER_CONFIG: 'Le service n’est pas encore prêt. Contactez le support.', SERVER_ERROR: 'Le service est momentanément indisponible. Réessayez dans un instant.', BAD_REQUEST: 'Demande invalide.'
+  };
+  async function evoAuth(action, corps, token) {
+    if (!configure()) throw new Error('Le service n\'est pas encore configuré. Contactez le support.');
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) throw Reseau.erreur();
+    const c = CONFIG(); const h = { apikey: c.supabaseAnonKey, 'Content-Type': 'application/json', Authorization: 'Bearer ' + c.supabaseAnonKey };
+    if (token) h['x-evo-token'] = token;
+    let r; try { r = await fetch(base() + '/functions/v1/evo-auth', { method: 'POST', headers: h, body: JSON.stringify({ action, ...corps }), cache: 'no-store' }); } catch (_) { throw Reseau.erreur(); }
+    let d = null; try { d = await r.json(); } catch (_) {}
+    if (!r.ok || !d || d.error) {
+      const code = (d && d.error) || ('HTTP_' + r.status);
+      let msg = MESSAGES_EVO[code] || 'Le service est momentanément indisponible. Réessayez dans un instant.';
+      if (code === 'BLOQUE') { const m = Math.max(1, Math.ceil(Number(d.secondes || 60) / 60)); msg = 'Trop d’erreurs. Réessayez dans ' + (m > 1 ? m + ' minutes.' : '1 minute.'); }
+      const e = new Error(msg); e.evo = true; e.code = code; e.status = r.status; if (code === 'BLOQUE') e.bloque = Number(d.secondes || 60);
+      try { Diag.noter('evo-auth ' + action, e); } catch (_) {}
+      throw e;
+    }
+    return d;
+  }
+  let dernierPin = null; // gardé en mémoire (jamais écrit sur le disque) pour confirmer un changement de code juste après la connexion
+  async function signInTel(numero, pin) { const d = await evoAuth('login', { phone: numero, pin }); dernierPin = { pin, t: Date.now() }; saveSession(d.session); return d.session; }
+  async function signUpTel({ phone, pin, fullName, accountType, businessName, inviteCode }) {
+    const d = await evoAuth('signup', { phone, pin, full_name: fullName, type: accountType, business_name: businessName, invite_code: inviteCode || null });
+    dernierPin = { pin, t: Date.now() }; saveSession(d.session); return d.session;
+  }
+  const jetonTel = (t) => { try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).user_metadata?.telephone || ''; } catch (_) { return ''; } };
+  async function changerCodeTel(token, nouveau) {
+    if (!dernierPin || Date.now() - dernierPin.t > 5 * 60 * 1000) throw new Error('Invalid login credentials');
+    return evoAuth('change_pin', { old_pin: dernierPin.pin, new_pin: nouveau }, token).then((r) => { dernierPin = { pin: nouveau, t: Date.now() }; return r; });
+  }
+  const recupDebut = (numero) => evoAuth('recup_start', { phone: numero });
+  async function recupFin(numero, code, nouveau) { const d = await evoAuth('recup_finish', { phone: numero, code, new_pin: nouveau }); dernierPin = { pin: nouveau, t: Date.now() }; saveSession(d.session); return d.session; }
+  async function emailDebut(email) { const s = await ensureFreshSession(); return evoAuth('email_start', { email }, s?.access_token); }
+  async function emailConfirmer(email, code) { const s = await ensureFreshSession(); return evoAuth('email_confirm', { email, code }, s?.access_token); }
   function saveSession(s){if(!s){clearSession();return}const x={...s};delete x.password;localStorage.setItem(STORAGE_KEY,JSON.stringify(x));scheduleRefresh(x)}
   function getSession(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(_){return null}}
   function clearSession(){if(refreshTimer)clearTimeout(refreshTimer);refreshTimer=null;localStorage.removeItem(STORAGE_KEY)}
@@ -42,7 +106,7 @@ const Auth = (() => {
 
   async function ensureFreshSession(){const s=getSession();if(!s)return null;if(typeof navigator!=='undefined'&&navigator.onLine===false)return s;const exp=Number(s.expires_at||0)*1000;if(exp&&exp-Date.now()<90000)return refreshSession();scheduleRefresh(s);return s}
   async function signUp({email,password,fullName,accountType,businessName,inviteCode}){if(accountType==='vendeur'&&!(inviteCode&&String(inviteCode).trim()))throw new Error('Un code d’invitation est requis pour un vendeur.');const d=await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({email:email.trim().toLowerCase(),password,data:{full_name:fullName.trim(),requested_account_type:accountType,business_name:businessName.trim(),invite_code:inviteCode?inviteCode.trim():null}})});if(d.access_token)saveSession(d);return d}
-  async function signIn(email,password){const d=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email.trim().toLowerCase(),password})});if(d.user&&d.user.email_confirmed_at===null)throw new Error('EMAIL_NOT_CONFIRMED');saveSession(d);return d}
+  async function signIn(email,password){if(estTel(email))return signInTel(numeroDe(email),password);const d=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email.trim().toLowerCase(),password})});if(d.user&&d.user.email_confirmed_at===null)throw new Error('EMAIL_NOT_CONFIRMED');saveSession(d);return d}
   // Appel d'une fonction publique du serveur (sans être connecté)
   async function rpcPublic(fn,args){return request('/rest/v1/rpc/'+fn,{method:'POST',body:JSON.stringify(args||{})})}
   // Appel d'une fonction du serveur avec la session de l'utilisateur connecté
@@ -67,7 +131,7 @@ const Auth = (() => {
     return getSession()||d;
   }
   async function resetPassword(email){return request('/auth/v1/recover',{method:'POST',body:JSON.stringify({email:email.trim().toLowerCase()})})}
-  async function updatePassword(token,newPassword){return request('/auth/v1/user',{method:'PUT',accessToken:token,body:JSON.stringify({password:newPassword})})}
+  async function updatePassword(token,newPassword){if(jetonTel(token)||(getSession()?.user?.user_metadata?.telephone))return changerCodeTel(token,newPassword);return request('/auth/v1/user',{method:'PUT',accessToken:token,body:JSON.stringify({password:newPassword})})}
   async function getProfile(userId,token){const rows=await request('/rest/v1/profiles?select=id,role,business_id,business_name&user_id=eq.'+encodeURIComponent(userId)+'&limit=1',{method:'GET',accessToken:token,headers:{Accept:'application/json'}});return Array.isArray(rows)?rows[0]||null:null}
   async function listFactors(){const s=await ensureFreshSession();if(!s?.access_token)throw new Error('AUTH_REQUIRED');const u=await request('/auth/v1/user',{method:'GET',accessToken:s.access_token});return{all:u?.factors||[]}}
   function aalOf(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).aal||'aal1'}catch(_){return 'aal1'}}
@@ -77,6 +141,6 @@ const Auth = (() => {
   async function requirePatronMfa(){const s=await ensureFreshSession();if(!s?.access_token)throw new Error('AUTH_REQUIRED');const f=await listFactors();const verified=(f?.all||[]).find(x=>x.factor_type==='totp'&&x.status==='verified');if(!verified)return{enrolled:false,aal2:false,factors:f};if(aalOf(s.access_token)==='aal2')return{enrolled:true,aal2:true,factor:verified,factors:f};const challenge=await challengeFactor(verified.id);return{enrolled:true,aal2:false,factor:verified,challenge,factors:f}}
   async function signOut(){const s=getSession();if(s?.access_token&&configure()){try{await request('/auth/v1/logout',{method:'POST',accessToken:s.access_token})}catch(_){}}clearSession()}
   window.addEventListener('online',()=>{if(getSession()?.refresh_token)ensureFreshSession().catch(()=>{})});
-  return{configure,signUp,signIn,rpcPublic,rpcAvecJeton,changerMotDePasse,resetPassword,updatePassword,getProfile,signOut,getSession,clearSession,refreshSession,ensureFreshSession,listFactors,enrollTotp,challengeFactor,verifyFactor,requirePatronMfa}
+  return{configure,signUp,signIn,estTel,emailTech,normaliserNumero,formaterNumero,identifiant,affichage,signUpTel,recupDebut,recupFin,emailDebut,emailConfirmer,rpcPublic,rpcAvecJeton,changerMotDePasse,resetPassword,updatePassword,getProfile,signOut,getSession,clearSession,refreshSession,ensureFreshSession,listFactors,enrollTotp,challengeFactor,verifyFactor,requirePatronMfa}
 })();
 window.Auth=Auth;

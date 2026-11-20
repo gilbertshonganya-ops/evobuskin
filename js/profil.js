@@ -15,7 +15,7 @@ const Profil = (() => {
   function initiales() {
     const n = String((typeof App !== 'undefined' && App.nomComplet) || '').trim();
     if (n) return n.split(/\s+/).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
-    const e = String((typeof App !== 'undefined' && App.utilisateurLocal && App.utilisateurLocal.email) || '').trim();
+    const e = String((typeof App !== 'undefined' && App.utilisateurLocal && !Auth.estTel(Auth.identifiant(App.utilisateurLocal)) && App.utilisateurLocal.email) || '').trim();
     return e ? e[0].toUpperCase() : '\u{1F464}';
   }
   function contenuAvatar() { return valide(photo) ? '<img src="' + photo + '" alt="Ma photo">' : esc(initiales()); }
@@ -82,7 +82,7 @@ const Profil = (() => {
   function ouvrir() {
     if (typeof App === 'undefined' || !App.role) return;
     const quoi = App.role === 'patron' ? 'Propriétaire' : 'Vendeur';
-    const contact = String((App.utilisateurLocal && (App.utilisateurLocal.phone || App.utilisateurLocal.email)) || '');
+    const contact = App.utilisateurLocal ? Auth.affichage(Auth.identifiant(App.utilisateurLocal) || App.utilisateurLocal.phone || '') : '';
     const f = ouvrirFenetre('Mon profil',
       '<div class="avatar avatar-grand" id="pfAvatar">' + contenuAvatar() + '</div>' +
       '<div class="profil-nom">' + esc(App.nomComplet || 'Mon compte') + '</div>' +

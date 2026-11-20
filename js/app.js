@@ -213,7 +213,7 @@ const App = {
 
   afficherConnexion() {
     this.role = null;
-    const montrer = () => { if (window.AuthUI) AuthUI.afficherConnexion(); };
+    const montrer = () => { if (window.AuthUI) (AuthUI.demarrer || AuthUI.afficherConnexion)(); };
     let auto = true;
     try { auto = !navigator.webdriver && !localStorage.getItem('evo_visites_off'); } catch (_) {}
     if (auto && window.Onboarding && !Onboarding.dejaVu()) Onboarding.afficher(montrer); else montrer();
@@ -349,10 +349,11 @@ const App = {
 
   // Après une ouverture hors ligne : se reconnecter avec Internet pour envoyer les opérations en attente
   reconnecter() {
-    const email = this.utilisateurLocal?.email || '';
+    const email = Auth.identifiant(this.utilisateurLocal);
+    const tel = Auth.estTel(email);
     const f = ouvrirFenetre('Reconnexion au serveur',
-      '<p class="petit">Entrez votre mot de passe pour envoyer vos ventes et mettre à jour vos données.</p>' +
-      '<label class="champ"><span>Mot de passe</span><input id="rcMdp" type="password" autocomplete="current-password"></label>' +
+      '<p class="petit">Entrez votre ' + (tel ? 'code secret' : 'mot de passe') + ' pour envoyer vos ventes et mettre à jour vos données.</p>' +
+      '<label class="champ"><span>' + (tel ? 'Code secret' : 'Mot de passe') + '</span><input id="rcMdp" type="password" autocomplete="current-password"' + (tel ? ' maxlength="5" autocapitalize="characters"' : '') + '></label>' +
       '<div class="bandeau rouge" id="rcErr" hidden></div><button class="btn" id="rcOk">Se reconnecter</button>');
     $('#rcOk', f.el).addEventListener('click', async () => {
       const mdp = $('#rcMdp', f.el).value;
@@ -361,7 +362,7 @@ const App = {
         const data = await Auth.signIn(email, mdp);
         f.fermer();
         this.sansJeton = false; await this.apresAuthentification(data);
-      } catch (e) { const er = $('#rcErr', f.el); er.textContent = /invalid login/i.test(e.message || '') ? 'Mot de passe incorrect.' : Reseau.traduire(e); er.hidden = false; }
+      } catch (e) { const er = $('#rcErr', f.el); er.textContent = /invalid login/i.test(e.message || '') ? (tel ? 'Code secret incorrect.' : 'Mot de passe incorrect.') : (e.evo ? e.message : Reseau.traduire(e)); er.hidden = false; }
     });
   },
 

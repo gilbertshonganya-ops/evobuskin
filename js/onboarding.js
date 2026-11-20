@@ -1,26 +1,24 @@
 /* EvoBuskin - présentation en 3 pages, affichée une seule fois à la toute première ouverture (avant la connexion). */
 const Onboarding = (() => {
   const CLE = 'evo_onboarding_vu';
-  const cadre = (ico, txt, cl) => '<li class="ob-cadre ' + (cl || '') + '"><span class="ob-ico">' + ico + '</span><span>' + txt + '</span></li>';
+  const img = (n) => '<div class="ob-illus"><img src="img/onb' + n + '.jpg" alt="" width="400" height="270" decoding="async"></div>';
+  const carte = (ico, t, d) => '<li class="ob-cadre ob-carte"><span class="ob-ico">' + ico + '</span><span><b>' + t + '</b>' + d + '</span></li>';
+  const ligne = (ico, t, d, cl) => '<li class="ob-cadre ' + (cl || '') + '"><span class="ob-ico">' + ico + '</span><span><b>' + t + '</b>' + d + '</span></li>';
+  const etape = (n, t, d, cl) => '<li class="ob-cadre"><span class="ob-num ' + (cl || '') + '">' + n + '</span><span><b>' + t + '</b>' + d + '</span></li>';
   const PAGES = [
-    { html:
-      '<div class="ob-halo" aria-hidden="true">\u{1F441}️</div>' +
-      '<h2>Sachez à tout moment ce que vous <b class="o">vendez</b>, ce qui reste <b class="o">en stock</b>, ce qu’on <b class="o">vous doit</b> et ce que vous <b class="o">gagnez</b> réellement.</h2>' +
-      '<ul class="ob-grille">' + cadre('\u{1F6D2}', '<b>Ventes</b>du jour en direct') + cadre('\u{1F4E6}', '<b>Stock</b>toujours à jour') + cadre('\u{1F9FE}', '<b>Dettes</b>clients suivies') + cadre('\u{1F4B0}', '<b>Bénéfice</b>réel calculé') + '</ul>' },
-    { html:
-      '<div class="ob-halo ob-aveugle" aria-hidden="true">\u{1F576}️</div>' +
+    { html: img(1) +
+      '<h2>Votre commerce,<br>sous <b class="o"><i>contrôle</i></b> !</h2>' +
+      '<p class="ob-sous">Gérez vos <b class="o">ventes</b>, vos <b class="o">stocks</b>, vos dépenses et vos <b class="o">bénéfices</b> depuis une seule application.</p>' +
+      '<ul class="ob-grille">' + carte('\u{1F6D2}', 'Ventes', 'Suivez vos ventes') + carte('\u{1F4E6}', 'Stock', 'Maîtrisez vos produits') + carte('\u{1F45B}', 'Dépenses', 'Contrôlez vos sorties') + carte('\u{1F4C8}', 'Bénéfices', 'Analysez vos résultats') + '</ul>' },
+    { html: img(2) +
       '<h2>Ne dirigez plus votre boutique <b class="o">à l’aveugle</b> !</h2>' +
-      '<ul class="ob-liste">' + cadre('\u{1F4C9}', 'Le stock <b>baisse tout seul</b> à chaque vente', 'v') + cadre('\u{1F514}', 'Soyez <b>prévenu</b> quand un produit est presque fini', 'o') + cadre('\u{1F4D2}', 'Gardez la <b>trace de ce que vos clients vous doivent</b>', 'b') + '</ul>' +
+      '<ul class="ob-liste">' + ligne('\u{1F4E6}', 'Stock actualisé automatiquement', 'Chaque vente met à jour votre stock.', 'v') + ligne('\u{1F514}', 'Alertes de stock intelligentes', 'Soyez averti avant la rupture.', 'o') + ligne('\u{1F465}', 'Suivi des dettes clients', 'Sachez qui vous doit de l’argent.', 'b') + '</ul>' +
       '<div class="ob-puce">\u{1F4F6} Fonctionne aussi sans Internet</div>' },
-    { html:
-      '<div class="ob-halo" aria-hidden="true">\u{1F680}</div>' +
+    { html: img(3) +
       '<h2>Prêt à prendre le <b class="o">contrôle</b> de votre commerce ?</h2>' +
-      '<p class="ob-sous">Quelques touches suffisent pour faire votre première vente :</p>' +
-      '<ol class="ob-etapes">' +
-        '<li class="ob-cadre"><span class="ob-num">1</span><span><b>Touchez les produits</b>Ils s’ajoutent au panier.</span></li>' +
-        '<li class="ob-cadre"><span class="ob-num">2</span><span><b>Choisissez le paiement</b>Espèces, mobile money ou crédit.</span></li>' +
-        '<li class="ob-cadre"><span class="ob-num v">✓</span><span><b>Vente terminée !</b>Stock et caisse sont déjà à jour.</span></li>' +
-      '</ol>' }
+      '<p class="ob-sous">Effectuez votre <b class="o">première vente</b> en quelques étapes simples.</p>' +
+      '<ol class="ob-etapes">' + etape('1', 'Sélectionnez vos produits', 'Ajoutez les articles au panier.') + etape('2', 'Choisissez le paiement', 'Espèces, Mobile Money ou crédit.') + etape('3', 'Validez votre vente', 'Votre stock et caisse sont mis à jour.', 'v') + '</ol>' +
+      '<div class="ob-merite"><b>Votre commerce mérite une meilleure gestion !</b>Simple, rapide et efficace.</div>' }
   ];
   const lire = () => { try { return localStorage.getItem(CLE) === '1'; } catch (_) { return false; } };
   const marquer = () => { try { localStorage.setItem(CLE, '1'); } catch (_) {} };

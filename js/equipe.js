@@ -174,9 +174,9 @@ const VueEquipe = {
     try {
       const rows = (await Equipe.listerEquipe()) || [];
       el.innerHTML = '<div class="liste">' + rows.map((m) =>
-        '<div class="ligne"><div><div class="nom">' + esc(m.full_name || m.email || 'Sans nom') + '</div><div class="petit">' + esc(m.email || '') + '</div></div>' +
+        '<div class="ligne"><div><div class="nom">' + esc(m.full_name || Auth.affichage(m.email) || 'Sans nom') + '</div><div class="petit">' + esc(Auth.affichage(m.email)) + '</div></div>' +
         '<div style="text-align:right"><span class="badge' + (m.is_owner ? '' : ' orange') + '">' + (m.is_owner ? 'Propriétaire' : 'Vendeur') + '</span>' + (m.suspended ? ' <span class="badge rouge">Suspendu</span>' : '') +
-        (m.is_owner ? '' : '<div><button class="btn gris" data-ret="' + esc(m.user_id) + '" data-nom="' + esc(m.full_name || m.email) + '" style="margin-top:6px;padding:4px 10px">Retirer l\'accès</button></div>') + '</div></div>').join('') + '</div>';
+        (m.is_owner ? '' : '<div><button class="btn gris" data-ret="' + esc(m.user_id) + '" data-nom="' + esc(m.full_name || Auth.affichage(m.email)) + '" style="margin-top:6px;padding:4px 10px">Retirer l\'accès</button></div>') + '</div></div>').join('') + '</div>';
       $$('[data-ret]', el).forEach((b) => b.addEventListener('click', async () => {
         if (!(await confirmer('Retirer l\'accès', b.dataset.nom + ' ne pourra plus accéder à votre boutique.', 'Retirer', true))) return;
         try { await Equipe.retirerMembre(b.dataset.ret); toast('Accès retiré', 'ok'); this.afficher(this.conteneur); }
@@ -200,7 +200,7 @@ const VueEquipe = {
         Equipe.listerEquipe()
       ]);
       const ventes = ventes0 || [], equipe = equipe0 || [];
-      const noms = {}; equipe.forEach((m) => { noms[m.user_id] = m.full_name || m.email || 'Vendeur'; });
+      const noms = {}; equipe.forEach((m) => { noms[m.user_id] = m.full_name || Auth.affichage(m.email) || 'Vendeur'; });
       const agr = {};
       ventes.forEach((v) => {
         if (!v.vendeur_user_id) return;

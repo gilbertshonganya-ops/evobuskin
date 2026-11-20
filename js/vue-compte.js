@@ -3,30 +3,33 @@
 const VueCompte = {
   async afficher(conteneur, integre) {
     const session = Auth.getSession();
-    const email = session?.user?.email || App.utilisateurLocal?.email || '';
+    const email = Auth.identifiant(session?.user) || Auth.identifiant(App.utilisateurLocal) || '';
+    const tel = Auth.estTel(email);
     const nom = App.nomComplet || (App.estPatron() ? 'Patron' : 'Vendeur');
     conteneur.innerHTML = (integre ? '' : '<h2>Réglages</h2>') +
       '<div class="carte"><h3>Mon compte</h3><div class="ligne-flex"><span class="petit">Nom</span><b>' + esc(nom) + '</b></div>' +
-      '<div class="ligne-flex"><span class="petit">Adresse email</span><b>' + esc(email) + '</b></div>' +
+      '<div class="ligne-flex"><span class="petit">' + (tel ? 'Numéro de téléphone' : 'Adresse email') + '</span><b>' + esc(Auth.affichage(email)) + '</b></div>' +
+      (tel ? '<div class="ligne-flex"><span class="petit">E-mail de récupération</span><b id="mcEmailRec">' + esc(this.emailRecup(session)) + '</b></div>' : '') +
       '<div class="ligne-flex"><span class="petit">Rôle</span><b>' + (App.estPatron() ? 'Patron' : 'Vendeur') + '</b></div></div>' +
-      '<div class="carte"><h3>Changer mon mot de passe</h3>' +
+      '<div class="carte"><h3>' + (tel ? 'Changer mon code secret' : 'Changer mon mot de passe') + '</h3>' +
       '<p class="petit">Il vous servira à vous connecter, avec Internet comme sans Internet.' + (App.estPatron() ? '' : ' Votre patron verra ce changement dans son journal d’activité.') + '</p>' +
-      '<label class="champ"><span>Mot de passe actuel</span><input id="mcAncien" type="password" autocomplete="current-password"></label>' +
-      '<label class="champ"><span>Nouveau mot de passe</span><input id="mcNouveau" type="password" autocomplete="new-password"></label>' +
-      '<label class="champ"><span>Confirmer le nouveau mot de passe</span><input id="mcConfirm" type="password" autocomplete="new-password"></label>' +
+      '<label class="champ"><span>' + (tel ? 'Code secret actuel' : 'Mot de passe actuel') + '</span><input id="mcAncien" type="password" autocomplete="current-password"' + (tel ? ' maxlength="5" autocapitalize="characters"' : '') + '></label>' +
+      '<label class="champ"><span>' + (tel ? 'Nouveau code secret' : 'Nouveau mot de passe') + '</span><input id="mcNouveau" type="password" autocomplete="new-password"' + (tel ? ' maxlength="5" autocapitalize="characters"' : '') + '></label>' +
+      '<label class="champ"><span>' + (tel ? 'Confirmer le nouveau code' : 'Confirmer le nouveau mot de passe') + '</span><input id="mcConfirm" type="password" autocomplete="new-password"' + (tel ? ' maxlength="5" autocapitalize="characters"' : '') + '></label>' +
       '<label class="champ" id="mcCodeZone" hidden><span>Code de sécurité à 6 chiffres</span><input id="mcCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label>' +
-      '<p class="petit">12 caractères minimum, avec majuscule, minuscule, chiffre et caractère spécial.</p>' +
+      '<p class="petit">' + (tel ? '5 caractères : 4 chiffres et 1 lettre majuscule (exemple : 4827K).' : '12 caractères minimum, avec majuscule, minuscule, chiffre et caractère spécial.') + '</p>' +
       '<div class="bandeau rouge" id="mcErreur" hidden></div>' +
-      '<button class="btn" id="mcOk">Changer mon mot de passe</button></div>' +
+      '<button class="btn" id="mcOk">' + (tel ? 'Changer mon code secret' : 'Changer mon mot de passe') + '</button></div>' +
+      (tel ? this.sectionEmail(session) : '') +
       (this.sectionSuppression ? await this.sectionSuppression() : '');
-    this.brancherSuppression(conteneur, email, integre);
+    this.brancherSuppression(conteneur, email, integre); this.brancherEmail(conteneur, integre);
     const erreur = (m) => { const e = $('#mcErreur'); e.textContent = m; e.hidden = !m; };
     $('#mcOk').addEventListener('click', async () => {
       erreur('');
       const ancien = $('#mcAncien').value, nouveau = $('#mcNouveau').value, confirm = $('#mcConfirm').value;
       if (AuthHorsLigne.attente('mdp') > 0) return erreur('Trop de tentatives. Patientez ' + AuthHorsLigne.attente('mdp') + ' secondes avant de réessayer.');
       if (!ancien) return erreur('Tapez votre mot de passe actuel.');
-      if (!AuthUI.validPassword(nouveau)) return erreur(AuthUI.MESSAGE_MDP);
+      if (tel ? AuthUI.verifierCode(nouveau) : !AuthUI.validPassword(nouveau)) return erreur(tel ? AuthUI.verifierCode(nouveau) : AuthUI.MESSAGE_MDP);
       if (nouveau !== confirm) return erreur('Les deux nouveaux mots de passe ne sont pas identiques.');
       if (nouveau === ancien) return erreur('Le nouveau mot de passe doit être différent de l’ancien.');
       if (!navigator.onLine) return erreur(Reseau.MESSAGE);
@@ -38,15 +41,54 @@ const VueCompte = {
         AuthHorsLigne.effacerEssais('mdp');
         await Audit.log('mot_de_passe_modifie', {});
         $('#mcAncien').value = $('#mcNouveau').value = $('#mcConfirm').value = $('#mcCode').value = ''; $('#mcCodeZone').hidden = true;
-        toast('Mot de passe modifié', 'ok');
+        toast(tel ? 'Code secret modifié' : 'Mot de passe modifié', 'ok');
       } catch (e) {
         if (e.mfaRequis) { $('#mcCodeZone').hidden = false; $('#mcCode').focus(); erreur('Votre compte est protégé par un code de sécurité. Entrez le code à 6 chiffres de votre application d’authentification, puis appuyez de nouveau sur « Changer mon mot de passe ».'); }
         else if (/invalid login credentials/i.test(String(e.message))) {
           AuthHorsLigne.compterEchec('mdp');
           Audit.log('mot_de_passe_incorrect', { texte: 'Mot de passe actuel incorrect lors d’un changement de mot de passe' });
-          erreur('Le mot de passe actuel est incorrect.');
+          erreur(tel ? 'Le code secret actuel est incorrect.' : 'Le mot de passe actuel est incorrect.');
         } else erreur(Reseau.traduire(e));
       } finally { bouton.disabled = false; }
+    });
+  },
+
+  emailRecup(session) {
+    const u = session?.user; const e = String(u?.email || '');
+    return u && e && !Auth.estTel(e) ? e : 'Non ajouté';
+  },
+  // E-mail de récupération : utile si on oublie son code secret (un code est envoyé à cette adresse)
+  sectionEmail(session) {
+    const deja = this.emailRecup(session) !== 'Non ajouté';
+    return '<div class="carte"><h3>E-mail de récupération</h3><p class="petit">' + (deja ? 'Si vous oubliez votre code secret, un code sera envoyé à cette adresse.' : 'Ajoutez une adresse e-mail pour pouvoir refaire votre code secret si vous l’oubliez.') + '</p>' +
+      (deja ? '' : '<button class="btn contour" id="mcAjoutEmail">Ajouter une adresse e-mail</button>') + '</div>';
+  },
+  brancherEmail(conteneur, integre) {
+    const b = $('#mcAjoutEmail', conteneur); if (!b) return;
+    b.addEventListener('click', () => {
+      if (!navigator.onLine) return toast(Reseau.MESSAGE, 'erreur');
+      const f = ouvrirFenetre('E-mail de récupération',
+        '<label class="champ"><span>Adresse e-mail</span><input id="erAdr" type="email" inputmode="email" autocomplete="email" maxlength="254"></label>' +
+        '<label class="champ" id="erCodeZone" hidden><span>Code reçu par e-mail</span><input id="erCode" inputmode="numeric" maxlength="8" autocomplete="one-time-code"></label>' +
+        '<div class="bandeau rouge" id="erErr" hidden></div><button class="btn" id="erOk">Envoyer le code</button>');
+      let adr = '', envoye = false;
+      const err = (m) => { const e = $('#erErr', f.el); e.textContent = m; e.hidden = !m; };
+      $('#erOk', f.el).addEventListener('click', async () => {
+        err(''); const ok = $('#erOk', f.el); ok.disabled = true;
+        try {
+          if (!envoye) {
+            adr = $('#erAdr', f.el).value.trim().toLowerCase();
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(adr)) throw new Error('Cette adresse e-mail n’est pas valide.');
+            await Auth.emailDebut(adr); envoye = true; $('#erCodeZone', f.el).hidden = false; ok.textContent = 'Confirmer';
+            err('Code envoyé à ' + adr + '. Entrez-le ci-dessus.'); $('#erErr', f.el).className = 'bandeau';
+          } else {
+            await Auth.emailConfirmer(adr, $('#erCode', f.el).value);
+            try { await Auth.refreshSession(); } catch (_) {}
+            f.fermer(); toast('Adresse e-mail enregistrée', 'ok'); this.afficher(conteneur, integre);
+          }
+        } catch (e) { err(e.evo || /adresse e-mail/.test(e.message) ? e.message : Reseau.traduire(e)); }
+        finally { ok.disabled = false; }
+      });
     });
   },
 
@@ -100,7 +142,7 @@ const VueCompte = {
           f.fermer(); toast('Suppression programmée. Vous pouvez l\'annuler pendant 30 jours.', 'ok');
           this.afficher(conteneur, integre);
         } catch (e) {
-          if (/invalid login credentials/i.test(String(e.message))) { AuthHorsLigne.compterEchec('suppr'); err('Mot de passe incorrect.'); }
+          if (/invalid login credentials/i.test(String(e.message))) { AuthHorsLigne.compterEchec('suppr'); err(Auth.estTel(email) ? 'Code secret incorrect.' : 'Mot de passe incorrect.'); }
           else err(Reseau.traduire(e));
         }
       });
